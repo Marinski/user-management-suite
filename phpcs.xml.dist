@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<ruleset name="User Management Suite">
+	<description>Coding standards for User Management Suite.</description>
+
+	<file>.</file>
+
+	<!-- Exclude build/vendor artifacts. -->
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="ps"/>
+
+	<!-- WordPress standards. -->
+	<rule ref="WordPress">
+		<!-- We use a real PSR-4-ish layout, not WP's file-naming scheme. -->
+		<exclude name="WordPress.Files.FileName"/>
+	</rule>
+
+	<!-- Text domain + prefix enforcement. -->
+	<config name="text_domain" value="user-management-suite"/>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="ums_"/>
+				<element value="UMS_"/>
+				<element value="Marinski\UserManagementSuite"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Minimum supported versions. -->
+	<config name="minimum_wp_version" value="6.2"/>
+	<config name="testVersion" value="7.4-"/>
+	<rule ref="PHPCompatibilityWP"/>
+</ruleset>

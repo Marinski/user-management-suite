@@ -1,0 +1,603 @@
+# Copyright (C) 2026 Marinski
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: User Management Suite 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/user-management-suite\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-14T11:51:11+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.11.0\n"
+"X-Domain: user-management-suite\n"
+
+#. Plugin Name of the plugin
+#: user-management-suite.php
+#: src/Settings/Settings.php:67
+#: src/Settings/Settings.php:130
+msgid "User Management Suite"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: user-management-suite.php
+msgid "https://github.com/Marinski/user-management-suite"
+msgstr ""
+
+#. Description of the plugin
+#: user-management-suite.php
+msgid "A complete, modular user-management toolkit: registration tracking, email verification, multiple roles per user, and instant user switching — all from one settings page."
+msgstr ""
+
+#. Author of the plugin
+#: user-management-suite.php
+msgid "Marinski"
+msgstr ""
+
+#. Author URI of the plugin
+#: user-management-suite.php
+msgid "https://github.com/Marinski"
+msgstr ""
+
+#. translators: %d: number of meta values imported.
+#: src/Admin/LegacyImporter.php:59
+msgid "Legacy import complete. %d values imported."
+msgstr ""
+
+#: src/Admin/LegacyImporter.php:67
+msgid "Import from legacy plugins"
+msgstr ""
+
+#: src/Admin/LegacyImporter.php:73
+msgid "Copies registration source, last login, IP and verification status from Academy User Registration and User Verification into this plugin. Existing values are kept; nothing is deleted."
+msgstr ""
+
+#: src/Admin/LegacyImporter.php:75
+msgid "Run import"
+msgstr ""
+
+#: src/Admin/LegacyImporter.php:89
+msgid "You do not have permission to run the import."
+msgstr ""
+
+#: src/Admin/LegacyImporter.php:94
+#: src/Modules/Registration/Exporter.php:100
+msgid "Security check failed."
+msgstr ""
+
+#: src/Admin/Menu.php:36
+msgid "Settings"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:45
+msgid "User ID"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:46
+msgid "Username"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:47
+msgid "Email"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:48
+msgid "Display name"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:49
+#: src/Modules/Roles/RolesModule.php:95
+#: src/Modules/Roles/RolesModule.php:219
+msgid "Roles"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:50
+#: src/Modules/Registration/RegistrationModule.php:147
+msgid "Registered"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:51
+#: src/Modules/Registration/RegistrationModule.php:203
+msgid "Reg. source"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:52
+msgid "Reg. URL"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:53
+#: src/Modules/Registration/RegistrationModule.php:151
+#: src/Modules/Registration/RegistrationModule.php:202
+msgid "Last login"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:54
+#: src/Modules/Registration/RegistrationModule.php:155
+msgid "Last login IP"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:66
+msgid "Export users (CSV)"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:79
+msgid "Optionally limit to specific user IDs (comma-separated). Leave blank to export all users."
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:81
+msgid "Download CSV"
+msgstr ""
+
+#: src/Modules/Registration/Exporter.php:95
+msgid "You do not have permission to export users."
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:42
+msgid "Registration & Activity Tracking"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:144
+msgid "User Management — Activity"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:152
+#: src/Modules/Registration/RegistrationModule.php:220
+msgid "Never"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:159
+msgid "Registration source"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:163
+msgid "Registration URL"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:297
+msgid "Registration"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:304
+msgid "Tracking"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:305
+msgid "Record the registration source (referrer) of new users"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:307
+msgid "Record each user's last login time"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:309
+msgid "Record the IP address used at last login"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:311
+msgid "Anonymize stored IP addresses (recommended for GDPR)"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:314
+msgid "Users list"
+msgstr ""
+
+#: src/Modules/Registration/RegistrationModule.php:315
+msgid "Show \"Last login\" and \"Reg. source\" columns on the Users screen"
+msgstr ""
+
+#: src/Modules/Roles/RolesModule.php:37
+msgid "Multiple Roles"
+msgstr ""
+
+#: src/Modules/Roles/RolesModule.php:108
+msgid "Assign one or more roles. This replaces the default single-role selector."
+msgstr ""
+
+#: src/Modules/Roles/RolesModule.php:226
+msgid "Assignable roles"
+msgstr ""
+
+#: src/Modules/Roles/RolesModule.php:228
+msgid "Limit which roles can be assigned via the checklist. Leave all unchecked to allow every role."
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:37
+#: src/Modules/Switching/SwitchingModule.php:358
+msgid "User Switching"
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:157
+msgid "You do not have permission to switch to this user."
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:162
+msgid "You must be logged in to switch users."
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:192
+msgid "Could not verify the original user."
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:233
+msgid "You do not have permission to switch off."
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:238
+msgid "You must be logged in."
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:339
+msgid "Switch To"
+msgstr ""
+
+#. translators: %s: user's display name.
+#: src/Modules/Switching/SwitchingModule.php:363
+msgid "Switch to %s"
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:387
+msgid "Switch off"
+msgstr ""
+
+#. translators: %s: original user's display name.
+#: src/Modules/Switching/SwitchingModule.php:400
+#: src/Modules/Switching/SwitchingModule.php:428
+msgid "Switch back to %s"
+msgstr ""
+
+#. translators: %s: current (switched-to) user's display name.
+#: src/Modules/Switching/SwitchingModule.php:423
+msgid "You are currently switched to %s."
+msgstr ""
+
+#. translators: %s: current user's display name.
+#: src/Modules/Switching/SwitchingModule.php:450
+msgid "Switched to %s."
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:453
+msgid "Switch back"
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:474
+msgid "Switching"
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:481
+msgid "Allowed roles"
+msgstr ""
+
+#: src/Modules/Switching/SwitchingModule.php:483
+msgid "Only users with these roles (and the ability to edit users) can switch accounts. Super admins can always switch."
+msgstr ""
+
+#. translators: %s: site name.
+#: src/Modules/Verification/Mailer.php:63
+msgid "Please verify your email address for %s"
+msgstr ""
+
+#: src/Modules/Verification/Mailer.php:67
+msgid ""
+"Hi {display_name},\n"
+"\n"
+"Thanks for registering at {site_name}. Please confirm your email address by clicking the link below:\n"
+"\n"
+"{verify_url}\n"
+"\n"
+"If you did not create this account, you can ignore this email."
+msgstr ""
+
+#: src/Modules/Verification/Spam.php:72
+msgid "<strong>Error</strong>: Registrations from this email domain are not allowed."
+msgstr ""
+
+#: src/Modules/Verification/Spam.php:76
+msgid "<strong>Error</strong>: Please register with an approved email domain."
+msgstr ""
+
+#: src/Modules/Verification/Spam.php:81
+msgid "<strong>Error</strong>: This username is not allowed."
+msgstr ""
+
+#: src/Modules/Verification/Spam.php:87
+msgid "<strong>Error</strong>: Please use a personal email address."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:75
+msgid "Email Verification"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:175
+msgid "<strong>Error</strong>: Your email address has not been verified yet. Please check your inbox for the verification link."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:258
+msgid "If an account with that email needs verification, a new link has been sent."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:264
+msgid "Your email address"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:267
+msgid "Resend verification email"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:289
+#: src/Modules/Verification/VerificationModule.php:303
+#: src/Modules/Verification/VerificationModule.php:317
+msgid "<strong>Error</strong>: Please complete the reCAPTCHA challenge."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:365
+#: src/Modules/Verification/VerificationModule.php:386
+#: src/Modules/Verification/VerificationModule.php:412
+msgid "Verified"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:389
+#: src/Modules/Verification/VerificationModule.php:413
+msgid "Unverified"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:409
+msgid "Filter by verification status"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:411
+msgid "All verification statuses"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:416
+msgid "Filter"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:455
+msgid "Mark verified"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:456
+msgid "Mark unverified"
+msgstr ""
+
+#. translators: %d: number of users updated.
+#: src/Modules/Verification/VerificationModule.php:507
+msgid "Updated verification status for %d user."
+msgid_plural "Updated verification status for %d users."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Modules/Verification/VerificationModule.php:583
+msgid "Verification"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:592
+msgid "Email verification"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:594
+msgid "Require verification"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:595
+msgid "New users must verify their email before they can log in"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:597
+msgid "Log users in automatically after they verify"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:600
+msgid "Exclude roles"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:602
+msgid "Users with these roles are never required to verify."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:605
+msgid "Redirect after verification"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:609
+msgid "Email sender & content"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:610
+msgid "From name"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:613
+msgid "From email"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:616
+msgid "Email subject"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:619
+msgid "Email body"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:620
+msgid "Tokens: {site_name} {site_url} {user_name} {display_name} {user_email} {verify_url}"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:623
+msgid "Spam protection"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:624
+msgid "Blocked email domains"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:625
+msgid "One domain per line, e.g. spam.com"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:627
+msgid "Allowed email domains"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:628
+msgid "If set, only these domains may register. One per line."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:630
+msgid "Blocked usernames"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:631
+msgid "One username per line."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:633
+msgid "Generic emails"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:634
+msgid "Block role-based addresses (admin@, info@, support@, …)"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:637
+msgid "Google reCAPTCHA"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:638
+msgid "Optional. When configured, tokens are sent to Google for verification. See the readme for details."
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:639
+msgid "Version"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:645
+#: src/Settings/Settings.php:233
+msgid "Disabled"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:646
+msgid "v2 Checkbox"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:647
+msgid "v2 Invisible"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:648
+msgid "v3"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:652
+msgid "Site key"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:655
+msgid "Secret key"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:658
+msgid "Protect forms"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:659
+msgid "Registration form"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:661
+msgid "Login form"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:663
+msgid "Lost-password form"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:666
+msgid "Unverified accounts"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:667
+msgid "Auto-delete after"
+msgstr ""
+
+#: src/Modules/Verification/VerificationModule.php:669
+msgid "Days. Set 0 to disable automatic deletion of unverified accounts."
+msgstr ""
+
+#: src/Settings/Fields.php:133
+msgid "— None —"
+msgstr ""
+
+#: src/Settings/Settings.php:68
+msgid "User Management"
+msgstr ""
+
+#: src/Settings/Settings.php:98
+msgid "General"
+msgstr ""
+
+#: src/Settings/Settings.php:106
+msgid "Tools"
+msgstr ""
+
+#: src/Settings/Settings.php:107
+msgid "Status"
+msgstr ""
+
+#: src/Settings/Settings.php:119
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: src/Settings/Settings.php:192
+msgid "Modules"
+msgstr ""
+
+#: src/Settings/Settings.php:202
+msgid "Enable only the features you need."
+msgstr ""
+
+#: src/Settings/Settings.php:204
+msgid "Data cleanup"
+msgstr ""
+
+#: src/Settings/Settings.php:209
+msgid "Delete all plugin data when the plugin is uninstalled"
+msgstr ""
+
+#: src/Settings/Settings.php:210
+msgid "When unchecked, your settings and tracked user data are preserved after uninstall."
+msgstr ""
+
+#: src/Settings/Settings.php:223
+msgid "Plugin version"
+msgstr ""
+
+#: src/Settings/Settings.php:224
+msgid "WordPress version"
+msgstr ""
+
+#: src/Settings/Settings.php:225
+msgid "PHP version"
+msgstr ""
+
+#: src/Settings/Settings.php:226
+msgid "Multisite"
+msgstr ""
+
+#: src/Settings/Settings.php:226
+msgid "Yes"
+msgstr ""
+
+#: src/Settings/Settings.php:226
+msgid "No"
+msgstr ""
+
+#: src/Settings/Settings.php:233
+msgid "Enabled"
+msgstr ""
+
+#: src/Settings/Settings.php:273
+msgid "Settings saved."
+msgstr ""

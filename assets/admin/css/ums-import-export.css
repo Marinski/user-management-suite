@@ -1,0 +1,134 @@
+/* User Management Suite — Import / Export styles */
+
+/* ------------------------------------------------------------------ Layout */
+.ums-ie-wrap { max-width: 1000px; }
+
+.ums-ie-tab-content { padding-top: 1.5em; }
+
+.ums-ie-section {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	padding: 1.25em 1.5em;
+	margin-bottom: 1.5em;
+}
+
+.ums-ie-section h2 {
+	margin-top: 0;
+	font-size: 1em;
+	font-weight: 600;
+	border-bottom: 1px solid #f0f0f0;
+	padding-bottom: .5em;
+	margin-bottom: 1em;
+}
+
+/* ------------------------------------------------- Export column picker */
+.ums-ie-col-group {
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	padding: .75em 1em;
+	margin-bottom: .75em;
+	display: inline-block;
+	min-width: 220px;
+	vertical-align: top;
+	margin-right: .75em;
+}
+
+.ums-ie-col-group legend {
+	font-weight: 600;
+	font-size: .85em;
+	text-transform: uppercase;
+	color: #50575e;
+	padding: 0 .4em;
+}
+
+.ums-ie-col-label {
+	display: block;
+	margin-bottom: .3em;
+	font-size: .9em;
+}
+
+/* ---------------------------------------------------------------- Progress */
+.ums-ie-progress { margin-top: .75em; }
+
+.ums-ie-progress-bar {
+	background: #dcdcde;
+	border-radius: 3px;
+	height: 10px;
+	overflow: hidden;
+	margin-bottom: .4em;
+}
+
+.ums-ie-progress-fill {
+	background: #2271b1;
+	height: 100%;
+	width: 0;
+	transition: width .25s ease;
+}
+
+/* ---------------------------------------------------------------- Status */
+.ums-ie-status {
+	display: inline-block;
+	margin-left: 1em;
+	font-style: italic;
+	color: #50575e;
+}
+
+/* ------------------------------------------------------------------ Steps */
+.ums-ie-step { background: #fff; border: 1px solid #c3c4c7; border-radius: 3px; padding: 1.5em; margin-bottom: 1.5em; }
+
+.ums-ie-step h2 { margin-top: 0; }
+
+.ums-ie-step-actions {
+	margin-top: 1.25em;
+	padding-top: 1em;
+	border-top: 1px solid #f0f0f0;
+	display: flex;
+	gap: .5em;
+}
+
+/* -------------------------------------------------------------- Drop-zone */
+.ums-ie-dropzone {
+	border: 2px dashed #c3c4c7;
+	border-radius: 4px;
+	padding: 2em;
+	text-align: center;
+	transition: border-color .15s, background .15s;
+	margin-bottom: 1em;
+}
+
+.ums-ie-dropzone.ums-ie-drag-over {
+	border-color: #2271b1;
+	background: #f0f6fc;
+}
+
+.ums-ie-dropzone p { margin: 0 0 .75em; color: #50575e; }
+
+#ums-ie-file-name {
+	display: inline-block;
+	margin-left: .75em;
+	font-weight: 600;
+}
+
+/* ---------------------------------------------------------- Mapping table */
+.ums-ie-mapping-table { margin-bottom: 1em; }
+
+.ums-ie-mapping-table th {
+	font-weight: 600;
+	background: #f6f7f7;
+}
+
+.ums-ie-mapping-table td { vertical-align: middle; }
+
+.ums-ie-mapping-table td:first-child { width: 40%; }
+
+.ums-ie-mapping-select { min-width: 200px; }
+
+/* -------------------------------------------------------------------- Log */
+.ums-ie-log, #ums-ie-full-log { margin-top: 1em; }
+
+#ums-ie-full-log table { max-height: 400px; overflow-y: auto; display: block; }
+
+tr.ums-ie-ok  td:nth-child(2) { color: #2a9d2a; font-weight: 600; }
+tr.ums-ie-warn td:nth-child(2) { color: #996800; font-weight: 600; }
+tr.ums-ie-err  td:nth-child(2) { color: #cc1818; font-weight: 600; }

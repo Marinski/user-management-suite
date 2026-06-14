@@ -1,0 +1,16 @@
+/* User Management Suite — admin styles */
+.ums-settings .nav-tab-wrapper {
+	margin-bottom: 1em;
+}
+
+.ums-settings .form-table th {
+	width: 220px;
+}
+
+.ums-settings fieldset label {
+	margin-bottom: 4px;
+}
+
+.ums-settings .description {
+	margin-top: 4px;
+}
