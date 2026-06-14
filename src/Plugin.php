@@ -12,6 +12,7 @@ use Marinski\UserManagementSuite\Settings\Settings;
 use Marinski\UserManagementSuite\Admin\Menu;
 use Marinski\UserManagementSuite\Admin\Assets;
 use Marinski\UserManagementSuite\Admin\LegacyImporter;
+use Marinski\UserManagementSuite\Admin\SpamExporter;
 use Marinski\UserManagementSuite\Modules\ModuleInterface;
 use Marinski\UserManagementSuite\Modules\Registration\RegistrationModule;
 use Marinski\UserManagementSuite\Modules\Roles\RolesModule;
@@ -117,6 +118,7 @@ final class Plugin {
 			( new Menu() )->register();
 			( new Assets() )->register();
 			( new LegacyImporter() )->register();
+			( new SpamExporter() )->register();
 		}
 
 		// Register each module's hooks (modules decide front vs admin internally).
