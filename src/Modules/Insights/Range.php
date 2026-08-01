@@ -130,9 +130,9 @@ class Range {
 		$range->from   = $from;
 		$range->to     = $to;
 
-		$length            = max( 1, $range->days() );
-		$range->prev_to    = wp_date( 'Y-m-d', strtotime( $from . ' -1 day' ) );
-		$range->prev_from  = wp_date( 'Y-m-d', strtotime( $range->prev_to . ' -' . ( $length - 1 ) . ' days' ) );
+		$length           = max( 1, $range->days() );
+		$range->prev_to   = wp_date( 'Y-m-d', strtotime( $from . ' -1 day' ) );
+		$range->prev_from = wp_date( 'Y-m-d', strtotime( $range->prev_to . ' -' . ( $length - 1 ) . ' days' ) );
 
 		return $range;
 	}

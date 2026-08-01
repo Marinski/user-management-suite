@@ -30,10 +30,10 @@ class Shortcode {
 	/**
 	 * Render the form.
 	 *
-	 * @param array<string,mixed>|string $atts Shortcode attributes.
+	 * @param array<string,mixed>|string $atts Shortcode attributes (none supported yet).
 	 * @return string
 	 */
-	public function render( $atts = array() ) {
+	public function render( $atts = array() ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by the shortcode API.
 		if ( ! is_user_logged_in() ) {
 			return '<p class="ums-prefs-notice">'
 				. esc_html__( 'Please sign in to manage your email preferences.', 'user-management-suite' )
@@ -113,7 +113,7 @@ class Shortcode {
 			return false;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verified above; only read as booleans below, against a fixed list of registered type ids.
 		$submitted = isset( $_POST['ums_notify'] ) ? wp_unslash( $_POST['ums_notify'] ) : array();
 		$submitted = is_array( $submitted ) ? $submitted : array();
 

@@ -68,8 +68,15 @@ class RetentionReport {
 				. esc_html__( 'No snapshots yet. This series is built one day at a time by the nightly job — last-login is a single moving value, so past days cannot be reconstructed after the fact.', 'user-management-suite' )
 				. '</p>';
 		} else {
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::line() escapes its own output.
-			echo Chart::line( $range->group( $series ), array( 'label' => __( 'Monthly active users', 'user-management-suite' ), 'color' => '#8c5e00' ) );
+			Chart::output(
+				Chart::line(
+					$range->group( $series ),
+					array(
+						'label' => __( 'Monthly active users', 'user-management-suite' ),
+						'color' => '#8c5e00',
+					)
+				)
+			);
 		}
 
 		echo '</div>';

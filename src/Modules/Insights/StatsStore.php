@@ -43,9 +43,9 @@ class StatsStore {
 	 * Rebuilds are idempotent: the old rows for the range go first, so a rerun
 	 * can never double-count.
 	 *
-	 * @param string   $from    Start date (Y-m-d), inclusive.
-	 * @param string   $to      End date (Y-m-d), inclusive.
-	 * @param string[] $metrics Metrics being rebuilt.
+	 * @param string                         $from    Start date (Y-m-d), inclusive.
+	 * @param string                         $to      End date (Y-m-d), inclusive.
+	 * @param string[]                       $metrics Metrics being rebuilt.
 	 * @param array<int,array<string,mixed>> $rows Rows to insert.
 	 * @return int Rows written.
 	 */
@@ -62,7 +62,7 @@ class StatsStore {
 		$args         = array_merge( array( $from, $to ), $metrics );
 
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Placeholders generated, values prepared.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Placeholder count is generated to match the argument array.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$table} WHERE stat_date >= %s AND stat_date <= %s AND metric IN ({$placeholders})",
@@ -90,6 +90,7 @@ class StatsStore {
 		$table   = Schema::stats_table();
 		$written = 0;
 
+		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is our own; every value is passed through prepare().
 		foreach ( array_chunk( $rows, 500 ) as $chunk ) {
 			$values = array();
 			$args   = array();
@@ -115,6 +116,8 @@ class StatsStore {
 
 			$written += (int) $result;
 		}
+
+		// phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return $written;
 	}
@@ -205,9 +208,10 @@ class StatsStore {
 
 		$table = Schema::stats_table();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is built from $wpdb->prefix; every value is prepared.
 				"SELECT SUM(hits) FROM {$table}
 				 WHERE metric = %s AND dimension = %s AND stat_date >= %s AND stat_date <= %s",
 				$metric,

@@ -113,7 +113,7 @@ class Unsubscribe {
 	 * @return void
 	 */
 	public function maybe_handle() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The signed token is the authentication.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The signed token is the authentication; sanitising it would corrupt the signature.
 		$raw = isset( $_GET[ self::QUERY_VAR ] ) ? wp_unslash( $_GET[ self::QUERY_VAR ] ) : '';
 
 		if ( '' === $raw || ! is_string( $raw ) ) {
@@ -207,8 +207,8 @@ class Unsubscribe {
 	/**
 	 * Show the confirmation form.
 	 *
-	 * @param string                            $token Raw token.
-	 * @param array{user_id:int,scope:string}   $claim Verified claim.
+	 * @param string                          $token Raw token.
+	 * @param array{user_id:int,scope:string} $claim Verified claim.
 	 * @return void
 	 */
 	private function render_confirmation( $token, array $claim ) {
@@ -279,6 +279,7 @@ class Unsubscribe {
 
 		$content = $escape ? '<p>' . esc_html( $body ) . '</p>' : $body;
 
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_language_attributes() returns a fixed, safe attribute string.
 		echo '<!DOCTYPE html><html ' . get_language_attributes() . '><head><meta charset="utf-8" />';
 		echo '<meta name="viewport" content="width=device-width, initial-scale=1" />';
 		echo '<meta name="robots" content="noindex, nofollow" />';
@@ -297,8 +298,8 @@ class Unsubscribe {
 			}
 		</style></head><body><div class="ums-box">';
 		echo '<h1>' . esc_html( $title ) . '</h1>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above or built from escaped parts.
-		echo $content;
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above, or assembled here from individually escaped parts.
+		echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '</div></body></html>';
 
 		exit;

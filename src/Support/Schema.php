@@ -151,7 +151,7 @@ class Schema {
 		global $wpdb;
 
 		foreach ( array( self::stats_table(), self::log_table() ) as $table ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Dropping our own table on uninstall.
 			$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
 		}
 

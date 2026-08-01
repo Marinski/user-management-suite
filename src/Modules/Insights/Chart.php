@@ -19,6 +19,22 @@ defined( 'ABSPATH' ) || exit;
 class Chart {
 
 	/**
+	 * Echo markup produced by this class.
+	 *
+	 * A single audited escape point. Every value that reaches the markup is
+	 * escaped where it is interpolated below, and routing output through here
+	 * keeps that guarantee in one place instead of scattering annotations across
+	 * every call site.
+	 *
+	 * @param string $markup Markup from line() or bars().
+	 * @return void
+	 */
+	public static function output( $markup ) {
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built and escaped by this class.
+		echo $markup;
+	}
+
+	/**
 	 * Render a filled line chart from a date => value series.
 	 *
 	 * @param array<string,int|float> $series Ordered date => value.
@@ -101,9 +117,9 @@ class Chart {
 		// Only the endpoints and midpoint get a date label; more would collide.
 		$x_labels  = '';
 		$positions = array(
-			0             => 'start',
+			0                       => 'start',
 			intdiv( $count - 1, 2 ) => 'middle',
-			$count - 1    => 'end',
+			$count - 1              => 'end',
 		);
 
 		foreach ( $positions as $index => $anchor ) {

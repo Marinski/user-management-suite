@@ -88,11 +88,11 @@ class SettingsRepository {
 				'import_batch_size' => 50,
 			),
 			'attribution'   => array(
-				'capture_enabled'  => true,
-				'require_consent'  => false,
-				'cookie_days'      => 30,
-				'channel_map'      => '',
-				'show_columns'     => true,
+				'capture_enabled' => true,
+				'require_consent' => false,
+				'cookie_days'     => 30,
+				'channel_map'     => '',
+				'show_columns'    => true,
 			),
 			'insights'      => array(
 				'nightly_rebuild' => true,

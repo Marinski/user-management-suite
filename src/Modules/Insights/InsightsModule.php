@@ -214,7 +214,11 @@ class InsightsModule extends AbstractModule implements ProvidesSettings {
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Sanitize this module's settings section.
+	 *
+	 * @param array<string,mixed> $input   Raw submitted ums_settings array.
+	 * @param array<string,mixed> $current Current (defaults-merged) settings.
+	 * @return array<string,mixed>
 	 */
 	public function sanitize_settings( array $input, array $current ) {
 		if ( ! isset( $input['insights'] ) || ! is_array( $input['insights'] ) ) {

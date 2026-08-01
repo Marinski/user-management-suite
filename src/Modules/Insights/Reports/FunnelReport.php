@@ -61,7 +61,7 @@ class FunnelReport {
 
 		self::render_funnel( $steps, $signups );
 
-		self::render_dropoff( $signups, $verified, $logged_in );
+		self::render_dropoff( $signups, $verified );
 
 		echo '<div class="ums-columns">';
 
@@ -90,8 +90,15 @@ class FunnelReport {
 
 		echo '<div class="ums-panel"><h2>' . esc_html__( 'Verified signups over time', 'user-management-suite' ) . '</h2>';
 		$series = $range->group( $range->fill( StatsStore::series( StatsStore::METRIC_VERIFIED, StatsStore::DIM_TOTAL, $range->from, $range->to ) ) );
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::line() escapes its own output.
-		echo Chart::line( $series, array( 'label' => __( 'Verified signups over time', 'user-management-suite' ), 'color' => '#007017' ) );
+		Chart::output(
+			Chart::line(
+				$series,
+				array(
+					'label' => __( 'Verified signups over time', 'user-management-suite' ),
+					'color' => '#007017',
+				)
+			)
+		);
 		echo '</div>';
 	}
 
@@ -116,15 +123,15 @@ class FunnelReport {
 		$previous = 0;
 
 		foreach ( $steps as $index => $step ) {
-			$share = ( $step['value'] / $top ) * 100;
+			$share      = ( $step['value'] / $top ) * 100;
 			$step_share = ( $index > 0 && $previous > 0 ) ? ( $step['value'] / $previous ) * 100 : 100;
 
 			printf(
-				'<div class="ums-funnel-step"><div class="ums-funnel-bar" style="width:%1$.2f%%"></div>'
+				'<div class="ums-funnel-step"><div class="ums-funnel-bar" style="width:%1$s%%"></div>'
 					. '<span class="ums-funnel-label">%2$s</span>'
 					. '<span class="ums-funnel-value">%3$s</span>'
 					. '<span class="ums-funnel-share">%4$s%%%5$s</span></div>',
-				max( 1.5, $share ),
+				esc_attr( number_format( max( 1.5, $share ), 2, '.', '' ) ),
 				esc_html( $step['label'] ),
 				esc_html( number_format_i18n( $step['value'] ) ),
 				esc_html( number_format_i18n( round( $share, 1 ), 1 ) ),
@@ -142,12 +149,11 @@ class FunnelReport {
 	/**
 	 * Call out the biggest leak in plain language.
 	 *
-	 * @param int $signups   Registered.
-	 * @param int $verified  Verified.
-	 * @param int $logged_in Signed in.
+	 * @param int $signups  Registered.
+	 * @param int $verified Verified.
 	 * @return void
 	 */
-	private static function render_dropoff( $signups, $verified, $logged_in ) {
+	private static function render_dropoff( $signups, $verified ) {
 		if ( $signups <= 0 ) {
 			return;
 		}

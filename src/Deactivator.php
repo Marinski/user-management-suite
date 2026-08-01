@@ -22,6 +22,8 @@ class Deactivator {
 	public static function deactivate() {
 		// Clear scheduled events owned by the plugin.
 		wp_clear_scheduled_hook( 'ums_auto_delete_unverified' );
+		wp_clear_scheduled_hook( 'ums_daily_rollup' );
+		wp_clear_scheduled_hook( 'ums_notification_log_cleanup' );
 
 		do_action( 'ums_deactivate' );
 	}

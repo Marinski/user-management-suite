@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       User Management Suite
  * Plugin URI:        https://github.com/Marinski/user-management-suite
- * Description:       A complete, modular user-management toolkit: registration tracking, email verification, multiple roles per user, and instant user switching — all from one settings page.
- * Version:           1.0.0
+ * Description:       A modular user-management toolkit: registration tracking, email verification, multiple roles, user switching, acquisition reporting and per-user notification preferences.
+ * Version:           1.1.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Marinski
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // ---------------------------------------------------------------------------
 // Constants.
 // ---------------------------------------------------------------------------
-define( 'UMS_VERSION', '1.0.0' );
+define( 'UMS_VERSION', '1.1.0' );
 define( 'UMS_PLUGIN_FILE', __FILE__ );
 define( 'UMS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UMS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

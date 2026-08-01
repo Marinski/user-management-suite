@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Dashboard {
 
-	const PAGE_SLUG = 'ums-insights';
+	const PAGE_SLUG     = 'ums-insights';
 	const EXPORT_ACTION = 'ums_insights_export';
 
 	/**
@@ -336,6 +336,7 @@ class Dashboard {
 			fputcsv( $handle, $row );
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Streaming to php://output; WP_Filesystem cannot write a download.
 		fclose( $handle );
 		exit;
 	}

@@ -157,8 +157,8 @@ class WooCommerceAdapter {
 		foreach ( self::optional_ids() as $id ) {
 			add_filter(
 				'woocommerce_email_enabled_' . $id,
-				function ( $enabled, $object = null ) use ( $id ) {
-					return $this->gate( $enabled, $object, $id );
+				function ( $enabled, $mail_object = null ) use ( $id ) {
+					return $this->gate( $enabled, $mail_object, $id );
 				},
 				20,
 				2
@@ -170,17 +170,17 @@ class WooCommerceAdapter {
 	 * Decide whether one WooCommerce email may go out.
 	 *
 	 * @param bool   $enabled Whether WooCommerce would send it.
-	 * @param mixed  $object  The order, subscription or user being mailed.
+	 * @param mixed  $mail_object  The order, subscription or user being mailed.
 	 * @param string $id      WooCommerce email id.
 	 * @return bool
 	 */
-	private function gate( $enabled, $object, $id ) {
+	private function gate( $enabled, $mail_object, $id ) {
 		// Never turn a disabled email back on.
 		if ( ! $enabled ) {
 			return false;
 		}
 
-		$user_id = self::resolve_user_id( $object );
+		$user_id = self::resolve_user_id( $mail_object );
 
 		// No identifiable recipient means no preference to honour, so send.
 		if ( $user_id <= 0 ) {
@@ -193,38 +193,38 @@ class WooCommerceAdapter {
 	/**
 	 * Work out which WordPress user an email object is addressed to.
 	 *
-	 * @param mixed $object Order, subscription, user or similar.
+	 * @param mixed $mail_object Order, subscription, user or similar.
 	 * @return int User id, or 0 when it cannot be determined.
 	 */
-	public static function resolve_user_id( $object ) {
-		if ( ! is_object( $object ) ) {
+	public static function resolve_user_id( $mail_object ) {
+		if ( ! is_object( $mail_object ) ) {
 			return 0;
 		}
 
 		// WC_Order and WC_Subscription both answer this.
-		if ( method_exists( $object, 'get_customer_id' ) ) {
-			$customer_id = (int) $object->get_customer_id();
+		if ( method_exists( $mail_object, 'get_customer_id' ) ) {
+			$customer_id = (int) $mail_object->get_customer_id();
 
 			if ( $customer_id > 0 ) {
 				return $customer_id;
 			}
 		}
 
-		if ( $object instanceof \WP_User ) {
-			return (int) $object->ID;
+		if ( $mail_object instanceof \WP_User ) {
+			return (int) $mail_object->ID;
 		}
 
-		if ( isset( $object->ID ) && is_numeric( $object->ID ) ) {
-			return (int) $object->ID;
+		if ( isset( $mail_object->ID ) && is_numeric( $mail_object->ID ) ) {
+			return (int) $mail_object->ID;
 		}
 
 		// Guest checkout: fall back to matching the billing address to an account.
 		$email = '';
 
-		if ( method_exists( $object, 'get_billing_email' ) ) {
-			$email = (string) $object->get_billing_email();
-		} elseif ( isset( $object->user_email ) ) {
-			$email = (string) $object->user_email;
+		if ( method_exists( $mail_object, 'get_billing_email' ) ) {
+			$email = (string) $mail_object->get_billing_email();
+		} elseif ( isset( $mail_object->user_email ) ) {
+			$email = (string) $mail_object->user_email;
 		}
 
 		if ( '' === $email || ! is_email( $email ) ) {

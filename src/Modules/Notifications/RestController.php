@@ -87,7 +87,7 @@ class RestController {
 
 		$target = $this->target_user( $request );
 
-		if ( $target === get_current_user_id() ) {
+		if ( get_current_user_id() === $target ) {
 			return true;
 		}
 
@@ -127,15 +127,15 @@ class RestController {
 
 		foreach ( Registry::types() as $id => $type ) {
 			$out[] = array(
-				'id'          => $id,
-				'label'       => $type['label'],
-				'description' => $type['description'],
-				'group'       => $type['group'],
-				'category'    => $type['category'],
+				'id'            => $id,
+				'label'         => $type['label'],
+				'description'   => $type['description'],
+				'group'         => $type['group'],
+				'category'      => $type['category'],
 				'categoryLabel' => Registry::category_label( $type['category'] ),
-				'channel'     => $type['channel'],
-				'required'    => ! $type['user_optout_allowed'],
-				'enabled'     => Preferences::allowed( $id, $user_id, $stored ),
+				'channel'       => $type['channel'],
+				'required'      => ! $type['user_optout_allowed'],
+				'enabled'       => Preferences::allowed( $id, $user_id, $stored ),
 			);
 		}
 

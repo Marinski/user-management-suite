@@ -138,7 +138,8 @@ class Aggregator {
 				break;
 			}
 
-			$ids = array();
+			$fetched = count( $users );
+			$ids     = array();
 
 			foreach ( $users as $user ) {
 				$ids[] = (int) $user->ID;
@@ -159,7 +160,7 @@ class Aggregator {
 				++$user_count;
 				self::accumulate( $acc, $date, isset( $meta[ $last_id ] ) ? $meta[ $last_id ] : array() );
 			}
-		} while ( count( $users ) === $batch );
+		} while ( $fetched === $batch );
 
 		$rows    = self::flatten( $acc );
 		$written = StatsStore::replace_range( $local_from, $local_to, self::metrics(), $rows );
@@ -308,16 +309,16 @@ class Aggregator {
 		);
 		// phpcs:enable
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Placeholder count is generated to match the argument array.
 		$rows = $wpdb->get_results( $sql );
 
 		$out = array();
 		$raw = array();
 
 		foreach ( (array) $rows as $row ) {
-			$user_id             = (int) $row->user_id;
+			$user_id                           = (int) $row->user_id;
 			$raw[ $user_id ][ $row->meta_key ] = $row->meta_value;
-			$value               = maybe_unserialize( $row->meta_value );
+			$value                             = maybe_unserialize( $row->meta_value );
 
 			switch ( $row->meta_key ) {
 				case Record::META_FIRST:

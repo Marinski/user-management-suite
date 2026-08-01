@@ -184,7 +184,7 @@ class NotificationsModule extends AbstractModule implements ProvidesSettings {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verified above; only read as booleans below, against a fixed list of registered type ids.
 		$submitted = isset( $_POST['ums_notify'] ) ? wp_unslash( $_POST['ums_notify'] ) : array();
 		$submitted = is_array( $submitted ) ? $submitted : array();
 
@@ -362,7 +362,11 @@ class NotificationsModule extends AbstractModule implements ProvidesSettings {
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Sanitize this module's settings section.
+	 *
+	 * @param array<string,mixed> $input   Raw submitted ums_settings array.
+	 * @param array<string,mixed> $current Current (defaults-merged) settings.
+	 * @return array<string,mixed>
 	 */
 	public function sanitize_settings( array $input, array $current ) {
 		if ( ! isset( $input['notifications'] ) || ! is_array( $input['notifications'] ) ) {

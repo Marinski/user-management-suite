@@ -242,7 +242,7 @@ class Backfill {
 		);
 		// phpcs:enable
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Placeholder count is generated to match the argument array.
 		$rows = $wpdb->get_results( $sql );
 
 		$out = array();
@@ -275,8 +275,8 @@ class Backfill {
 
 		// WooCommerce stores the session start as a datetime string, not a stamp.
 		if ( isset( $input['ts'] ) ) {
-			$stamp         = strtotime( (string) $input['ts'] );
-			$input['ts']   = $stamp ? $stamp : 0;
+			$stamp       = strtotime( (string) $input['ts'] );
+			$input['ts'] = $stamp ? $stamp : 0;
 		}
 
 		$input['origin'] = Record::ORIGIN_BACKFILL;

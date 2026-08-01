@@ -83,13 +83,14 @@ class EmailHealthReport {
 
 		arsort( $labelled );
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			$labelled,
-			array(
-				'label_header' => __( 'Notification', 'user-management-suite' ),
-				'count_header' => __( 'Opted out', 'user-management-suite' ),
-				'empty'        => __( 'Nobody has opted out of anything yet.', 'user-management-suite' ),
+		Chart::output(
+			Chart::bars(
+				$labelled,
+				array(
+					'label_header' => __( 'Notification', 'user-management-suite' ),
+					'count_header' => __( 'Opted out', 'user-management-suite' ),
+					'empty'        => __( 'Nobody has opted out of anything yet.', 'user-management-suite' ),
+				)
 			)
 		);
 		echo '</div>';
@@ -123,13 +124,14 @@ class EmailHealthReport {
 			$labelled[ $label ] = $count;
 		}
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			$labelled,
-			array(
-				'label_header' => __( 'Notification', 'user-management-suite' ),
-				'count_header' => __( 'Sent', 'user-management-suite' ),
-				'empty'        => __( 'Nothing logged in this period. The log only records mail sent after the module was switched on.', 'user-management-suite' ),
+		Chart::output(
+			Chart::bars(
+				$labelled,
+				array(
+					'label_header' => __( 'Notification', 'user-management-suite' ),
+					'count_header' => __( 'Sent', 'user-management-suite' ),
+					'empty'        => __( 'Nothing logged in this period. The log only records mail sent after the module was switched on.', 'user-management-suite' ),
+				)
 			)
 		);
 

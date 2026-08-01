@@ -71,9 +71,23 @@ class ChannelMap {
 	 */
 	private static function search_hosts() {
 		return array(
-			'google', 'bing', 'yahoo', 'duckduckgo', 'baidu', 'yandex', 'ecosia',
-			'brave', 'startpage', 'qwant', 'naver', 'seznam', 'ask', 'aol',
-			'searx', 'lycos', 'mojeek',
+			'google',
+			'bing',
+			'yahoo',
+			'duckduckgo',
+			'baidu',
+			'yandex',
+			'ecosia',
+			'brave',
+			'startpage',
+			'qwant',
+			'naver',
+			'seznam',
+			'ask',
+			'aol',
+			'searx',
+			'lycos',
+			'mojeek',
 		);
 	}
 
@@ -84,10 +98,27 @@ class ChannelMap {
 	 */
 	private static function social_hosts() {
 		return array(
-			'facebook', 'instagram', 'youtube', 'twitter', 'x', 'linkedin',
-			'pinterest', 'reddit', 'tiktok', 'snapchat', 'tumblr', 'quora',
-			'telegram', 'whatsapp', 'discord', 'vk', 'weibo', 'threads',
-			'mastodon', 'medium', 'twitch',
+			'facebook',
+			'instagram',
+			'youtube',
+			'twitter',
+			'x',
+			'linkedin',
+			'pinterest',
+			'reddit',
+			'tiktok',
+			'snapchat',
+			'tumblr',
+			'quora',
+			'telegram',
+			'whatsapp',
+			'discord',
+			'vk',
+			'weibo',
+			'threads',
+			'mastodon',
+			'medium',
+			'twitch',
 		);
 	}
 
@@ -103,7 +134,7 @@ class ChannelMap {
 	/**
 	 * Resolve an attribution record to a channel slug.
 	 *
-	 * @param array<string,mixed> $attr    Attribution data (source, medium, type, referrer...).
+	 * @param array<string,mixed>  $attr    Attribution data (source, medium, type, referrer...).
 	 * @param array<string,string> $custom Optional host/source => channel overrides.
 	 * @return string
 	 */

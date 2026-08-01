@@ -222,15 +222,15 @@ class AttributionModule extends AbstractModule implements ProvidesSettings {
 		}
 
 		$rows = array(
-			__( 'Channel', 'user-management-suite' )  => ChannelMap::label( (string) $touch['channel'] ),
-			__( 'Source', 'user-management-suite' )   => (string) $touch['source'],
-			__( 'Medium', 'user-management-suite' )   => (string) $touch['medium'],
-			__( 'Campaign', 'user-management-suite' ) => (string) $touch['campaign'],
-			__( 'Click id', 'user-management-suite' ) => (string) $touch['click_id'],
-			__( 'Referrer', 'user-management-suite' ) => (string) $touch['referrer'],
+			__( 'Channel', 'user-management-suite' )      => ChannelMap::label( (string) $touch['channel'] ),
+			__( 'Source', 'user-management-suite' )       => (string) $touch['source'],
+			__( 'Medium', 'user-management-suite' )       => (string) $touch['medium'],
+			__( 'Campaign', 'user-management-suite' )     => (string) $touch['campaign'],
+			__( 'Click id', 'user-management-suite' )     => (string) $touch['click_id'],
+			__( 'Referrer', 'user-management-suite' )     => (string) $touch['referrer'],
 			__( 'Landing page', 'user-management-suite' ) => (string) $touch['landing'],
-			__( 'Device', 'user-management-suite' )   => (string) $touch['device'],
-			__( 'Recorded', 'user-management-suite' ) => $touch['ts']
+			__( 'Device', 'user-management-suite' )       => (string) $touch['device'],
+			__( 'Recorded', 'user-management-suite' )     => $touch['ts']
 				? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $touch['ts'] )
 				: '',
 		);
@@ -416,7 +416,11 @@ class AttributionModule extends AbstractModule implements ProvidesSettings {
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Sanitize this module's settings section.
+	 *
+	 * @param array<string,mixed> $input   Raw submitted ums_settings array.
+	 * @param array<string,mixed> $current Current (defaults-merged) settings.
+	 * @return array<string,mixed>
 	 */
 	public function sanitize_settings( array $input, array $current ) {
 		if ( ! isset( $input['attribution'] ) || ! is_array( $input['attribution'] ) ) {

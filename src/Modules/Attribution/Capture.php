@@ -155,6 +155,7 @@ class Capture {
 			return array();
 		}
 
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated as JSON below, then every field passes through Record::sanitize().
 		$raw = wp_unslash( $_COOKIE[ Record::COOKIE ] );
 
 		if ( ! is_string( $raw ) || strlen( $raw ) > 4096 ) {
@@ -231,7 +232,7 @@ class Capture {
 			$first            = Record::sanitize( $cookie['f'] );
 			$first['channel'] = ChannelMap::resolve( $first, self::channel_map() );
 
-			$last = isset( $cookie['l'] ) && is_array( $cookie['l'] ) ? Record::sanitize( $cookie['l'] ) : $first;
+			$last            = isset( $cookie['l'] ) && is_array( $cookie['l'] ) ? Record::sanitize( $cookie['l'] ) : $first;
 			$last['channel'] = ChannelMap::resolve( $last, self::channel_map() );
 
 			return array(
@@ -256,7 +257,7 @@ class Capture {
 	 * @return array<string,mixed>
 	 */
 	private static function from_submitted_payload() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Read-only; the surrounding registration flow owns nonce checking.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only; the surrounding registration flow owns nonce checking; decoded as JSON below, then every field passes through Record::sanitize().
 		$raw = isset( $_POST['ums_attribution'] ) ? wp_unslash( $_POST['ums_attribution'] ) : null;
 
 		if ( null === $raw ) {

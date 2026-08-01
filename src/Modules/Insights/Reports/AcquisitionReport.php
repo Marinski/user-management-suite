@@ -98,12 +98,13 @@ class AcquisitionReport {
 		self::render_origin_notice( $origins );
 
 		echo '<div class="ums-panel"><h2>' . esc_html__( 'Channels', 'user-management-suite' ) . '</h2>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			self::relabel( $channels, array( ChannelMap::class, 'label' ) ),
-			array(
-				'label_header' => __( 'Channel', 'user-management-suite' ),
-				'total'        => $total,
+		Chart::output(
+			Chart::bars(
+				self::relabel( $channels, array( ChannelMap::class, 'label' ) ),
+				array(
+					'label_header' => __( 'Channel', 'user-management-suite' ),
+					'total'        => $total,
+				)
 			)
 		);
 		echo '</div>';
@@ -112,12 +113,13 @@ class AcquisitionReport {
 		echo '<p class="description">'
 			. esc_html__( 'The raw referring host or utm_source, before it is grouped into a channel.', 'user-management-suite' )
 			. '</p>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			$sources,
-			array(
-				'label_header' => __( 'Source', 'user-management-suite' ),
-				'total'        => $total,
+		Chart::output(
+			Chart::bars(
+				$sources,
+				array(
+					'label_header' => __( 'Source', 'user-management-suite' ),
+					'total'        => $total,
+				)
 			)
 		);
 		echo '</div>';
@@ -125,23 +127,25 @@ class AcquisitionReport {
 		echo '<div class="ums-columns">';
 
 		echo '<div class="ums-panel"><h2>' . esc_html__( 'Mediums', 'user-management-suite' ) . '</h2>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			$mediums,
-			array(
-				'label_header' => __( 'Medium', 'user-management-suite' ),
-				'total'        => $total,
+		Chart::output(
+			Chart::bars(
+				$mediums,
+				array(
+					'label_header' => __( 'Medium', 'user-management-suite' ),
+					'total'        => $total,
+				)
 			)
 		);
 		echo '</div>';
 
 		echo '<div class="ums-panel"><h2>' . esc_html__( 'Devices', 'user-management-suite' ) . '</h2>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			$devices,
-			array(
-				'label_header' => __( 'Device', 'user-management-suite' ),
-				'total'        => $total,
+		Chart::output(
+			Chart::bars(
+				$devices,
+				array(
+					'label_header' => __( 'Device', 'user-management-suite' ),
+					'total'        => $total,
+				)
 			)
 		);
 		echo '</div>';
@@ -149,13 +153,14 @@ class AcquisitionReport {
 		echo '</div>';
 
 		echo '<div class="ums-panel"><h2>' . esc_html__( 'Campaigns', 'user-management-suite' ) . '</h2>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			$campaigns,
-			array(
-				'label_header' => __( 'Campaign', 'user-management-suite' ),
-				'total'        => $total,
-				'empty'        => __( 'No utm_campaign values recorded in this period.', 'user-management-suite' ),
+		Chart::output(
+			Chart::bars(
+				$campaigns,
+				array(
+					'label_header' => __( 'Campaign', 'user-management-suite' ),
+					'total'        => $total,
+					'empty'        => __( 'No utm_campaign values recorded in this period.', 'user-management-suite' ),
+				)
 			)
 		);
 		echo '</div>';

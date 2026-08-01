@@ -87,30 +87,33 @@ class GrowthReport {
 				. '</p>';
 		}
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::line() escapes its own output.
-		echo Chart::line( $series, array( 'label' => __( 'Signups over time', 'user-management-suite' ) ) );
+		Chart::output(
+			Chart::line( $series, array( 'label' => __( 'Signups over time', 'user-management-suite' ) ) )
+		);
 		echo '</div>';
 
 		echo '<div class="ums-columns">';
 
 		echo '<div class="ums-panel"><h2>' . esc_html__( 'By channel', 'user-management-suite' ) . '</h2>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			self::label_channels( $channels ),
-			array(
-				'label_header' => __( 'Channel', 'user-management-suite' ),
-				'total'        => $current,
+		Chart::output(
+			Chart::bars(
+				self::label_channels( $channels ),
+				array(
+					'label_header' => __( 'Channel', 'user-management-suite' ),
+					'total'        => $current,
+				)
 			)
 		);
 		echo '</div>';
 
 		echo '<div class="ums-panel"><h2>' . esc_html__( 'By role', 'user-management-suite' ) . '</h2>';
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Chart::bars() escapes its own output.
-		echo Chart::bars(
-			self::label_roles( $roles ),
-			array(
-				'label_header' => __( 'Role', 'user-management-suite' ),
-				'total'        => $current,
+		Chart::output(
+			Chart::bars(
+				self::label_roles( $roles ),
+				array(
+					'label_header' => __( 'Role', 'user-management-suite' ),
+					'total'        => $current,
+				)
 			)
 		);
 		echo '</div>';
