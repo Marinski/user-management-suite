@@ -19,7 +19,10 @@ use Marinski\UserManagementSuite\Modules\Roles\RolesModule;
 use Marinski\UserManagementSuite\Modules\Switching\SwitchingModule;
 use Marinski\UserManagementSuite\Modules\Verification\VerificationModule;
 use Marinski\UserManagementSuite\Modules\ImportExport\ImportExportModule;
+use Marinski\UserManagementSuite\Modules\Insights\InsightsModule;
 use Marinski\UserManagementSuite\Support\Privacy;
+use Marinski\UserManagementSuite\Support\Schema;
+use Marinski\UserManagementSuite\Cli\Commands;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -107,6 +110,11 @@ final class Plugin {
 
 		load_plugin_textdomain( 'user-management-suite', false, dirname( UMS_PLUGIN_BASENAME ) . '/languages' );
 
+		// Cheap no-op once the tables match the shipped schema version.
+		Schema::maybe_upgrade();
+
+		Commands::register();
+
 		$this->register_modules();
 
 		// Privacy export/erase/policy hooks — needed on both admin and CLI/cron contexts.
@@ -143,6 +151,7 @@ final class Plugin {
 			new RolesModule( $this->settings ),
 			new SwitchingModule( $this->settings ),
 			new ImportExportModule( $this->settings ),
+			new InsightsModule( $this->settings ),
 		);
 
 		/**

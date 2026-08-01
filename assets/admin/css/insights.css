@@ -1,0 +1,173 @@
+/**
+ * Insights report screens.
+ */
+
+.ums-insights .ums-range-picker {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 16px 0;
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.ums-insights .ums-range-summary {
+	color: #646970;
+	font-style: italic;
+}
+
+.ums-insights .ums-export {
+	margin-left: auto;
+}
+
+.ums-cards {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 200px, 1fr ) );
+	gap: 12px;
+	margin: 16px 0;
+}
+
+.ums-card {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 16px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.ums-card-label {
+	color: #646970;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.ums-card-value {
+	font-size: 26px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.ums-card-note {
+	color: #646970;
+	font-size: 12px;
+}
+
+.ums-delta {
+	font-size: 13px;
+	font-weight: 600;
+	vertical-align: middle;
+}
+
+.ums-delta-up {
+	color: #007017;
+}
+
+.ums-delta-down {
+	color: #b32d2e;
+}
+
+.ums-delta-flat {
+	color: #646970;
+}
+
+.ums-panel {
+	margin: 16px 0;
+	padding: 16px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.ums-panel > h2 {
+	margin-top: 0;
+}
+
+.ums-columns {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 320px, 1fr ) );
+	gap: 16px;
+}
+
+.ums-columns .ums-panel {
+	margin: 0;
+}
+
+.ums-chart {
+	display: block;
+	overflow: visible;
+}
+
+.ums-chart-empty {
+	padding: 24px 0;
+	color: #646970;
+	text-align: center;
+}
+
+/* Ranked bar tables: the bar sits behind the label rather than beside it, so
+   long source names stay readable at any column width. */
+.ums-bars .ums-bar-cell {
+	position: relative;
+	min-width: 200px;
+}
+
+.ums-bars .ums-bar {
+	position: absolute;
+	top: 4px;
+	bottom: 4px;
+	left: 0;
+	opacity: 0.16;
+	border-radius: 2px;
+}
+
+.ums-bars .ums-bar-label {
+	position: relative;
+	word-break: break-word;
+}
+
+.ums-bars .ums-num {
+	width: 90px;
+	text-align: right;
+	white-space: nowrap;
+}
+
+.ums-footnote {
+	margin-top: 24px;
+	color: #646970;
+	font-style: italic;
+}
+
+.ums-origin-notice {
+	margin: 16px 0;
+}
+
+/* Dashboard widget. */
+.ums-widget-headline {
+	font-size: 14px;
+}
+
+.ums-widget-headline strong {
+	font-size: 22px;
+}
+
+.ums-widget-list {
+	margin: 8px 0;
+}
+
+.ums-widget-list li {
+	display: flex;
+	justify-content: space-between;
+	padding: 4px 0;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+@media screen and ( max-width: 782px ) {
+	.ums-insights .ums-export {
+		margin-left: 0;
+	}
+}
