@@ -81,6 +81,17 @@ class RegistrationModule extends AbstractModule implements ProvidesSettings {
 			return;
 		}
 
+		/*
+		 * wp_get_referer() at signup returns the previous page on this site, so
+		 * this records the last internal click, not where the visitor came from.
+		 * The Acquisition module captures the real thing on the landing page; when
+		 * it is running, leave the weaker signal alone rather than storing two
+		 * answers to the same question.
+		 */
+		if ( $this->settings->is_module_enabled( 'attribution' ) ) {
+			return;
+		}
+
 		$referer = wp_get_referer();
 		if ( ! $referer && isset( $_SERVER['HTTP_REFERER'] ) ) {
 			$referer = esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
@@ -306,6 +317,17 @@ class RegistrationModule extends AbstractModule implements ProvidesSettings {
 	public function render_settings_tab( SettingsRepository $settings ) {
 		Fields::row_start( __( 'Tracking', 'user-management-suite' ) );
 		Fields::checkbox( 'registration', 'track_source', $settings->get( 'registration', 'track_source', true ), __( 'Record the registration source (referrer) of new users', 'user-management-suite' ) );
+
+		if ( $settings->is_module_enabled( 'attribution' ) ) {
+			echo '<p class="description">'
+				. esc_html__( 'Superseded by the Acquisition module, which captures the real source on the landing page. This setting no longer writes anything.', 'user-management-suite' )
+				. '</p>';
+		} else {
+			echo '<p class="description">'
+				. esc_html__( 'This only sees the previous page on your own site, so it usually records an internal link. Enable the Acquisition module for real source data.', 'user-management-suite' )
+				. '</p>';
+		}
+
 		echo '<br />';
 		Fields::checkbox( 'registration', 'track_last_login', $settings->get( 'registration', 'track_last_login', true ), __( 'Record each user\'s last login time', 'user-management-suite' ) );
 		echo '<br />';

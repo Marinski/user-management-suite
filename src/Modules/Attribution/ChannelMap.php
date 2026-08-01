@@ -108,9 +108,21 @@ class ChannelMap {
 	 * @return string
 	 */
 	public static function resolve( array $attr, array $custom = array() ) {
-		$source = strtolower( trim( (string) ( $attr['source'] ?? '' ) ) );
-		$medium = strtolower( trim( (string) ( $attr['medium'] ?? '' ) ) );
-		$type   = strtolower( trim( (string) ( $attr['type'] ?? '' ) ) );
+		$source   = strtolower( trim( (string) ( $attr['source'] ?? '' ) ) );
+		$medium   = strtolower( trim( (string) ( $attr['medium'] ?? '' ) ) );
+		$type     = strtolower( trim( (string) ( $attr['type'] ?? '' ) ) );
+		$click_id = trim( (string) ( $attr['click_id'] ?? '' ) );
+
+		/*
+		 * A click id only exists because an ad platform put it there. Without this
+		 * an auto-tagged Google Ads click — gclid, no utm parameters, referrer
+		 * google.com — reads as organic search, quietly crediting SEO for traffic
+		 * that was paid for.
+		 */
+		if ( '' !== $click_id && '' === self::match_custom( $source, $custom ) ) {
+			/** This filter is documented below in this method. */
+			return apply_filters( 'ums_attribution_channel', self::PAID, $attr );
+		}
 
 		$channel = self::calculate( $source, $medium, $type, $custom );
 

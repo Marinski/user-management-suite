@@ -19,6 +19,7 @@ use Marinski\UserManagementSuite\Modules\Roles\RolesModule;
 use Marinski\UserManagementSuite\Modules\Switching\SwitchingModule;
 use Marinski\UserManagementSuite\Modules\Verification\VerificationModule;
 use Marinski\UserManagementSuite\Modules\ImportExport\ImportExportModule;
+use Marinski\UserManagementSuite\Modules\Attribution\AttributionModule;
 use Marinski\UserManagementSuite\Modules\Insights\InsightsModule;
 use Marinski\UserManagementSuite\Support\Privacy;
 use Marinski\UserManagementSuite\Support\Schema;
@@ -151,6 +152,7 @@ final class Plugin {
 			new RolesModule( $this->settings ),
 			new SwitchingModule( $this->settings ),
 			new ImportExportModule( $this->settings ),
+			new AttributionModule( $this->settings ),
 			new InsightsModule( $this->settings ),
 		);
 
