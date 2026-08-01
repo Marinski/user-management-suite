@@ -8,6 +8,7 @@
 namespace Marinski\UserManagementSuite;
 
 use Marinski\UserManagementSuite\Settings\SettingsRepository;
+use Marinski\UserManagementSuite\Support\Schema;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -26,7 +27,8 @@ class Activator {
 			add_option( SettingsRepository::OPTION_KEY, SettingsRepository::defaults() );
 		}
 
-		// Per-module activation (cron schedules, tables) is wired in later phases.
+		Schema::install();
+
 		do_action( 'ums_activate' );
 	}
 }

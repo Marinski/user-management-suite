@@ -37,6 +37,11 @@ class SettingsRepository {
 				'roles'         => true,
 				'switching'     => true,
 				'import_export' => true,
+				// The reporting and preference modules add tables, a cron job and
+				// front-end capture, so they stay off until deliberately enabled.
+				'attribution'   => false,
+				'insights'      => false,
+				'notifications' => false,
 			),
 			'general'       => array(
 				'delete_data_on_uninstall' => false,
@@ -81,6 +86,24 @@ class SettingsRepository {
 			'import_export' => array(
 				'export_batch_size' => 200,
 				'import_batch_size' => 50,
+			),
+			'attribution'   => array(
+				'capture_enabled'  => true,
+				'require_consent'  => false,
+				'cookie_days'      => 30,
+				'channel_map'      => '',
+				'show_columns'     => true,
+			),
+			'insights'      => array(
+				'nightly_rebuild' => true,
+				'rebuild_days'    => 7,
+			),
+			'notifications' => array(
+				'enable_woocommerce' => true,
+				'enable_core'        => true,
+				'log_sends'          => true,
+				'log_retention_days' => 90,
+				'preferences_page'   => 0,
 			),
 		);
 	}
