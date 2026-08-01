@@ -23,6 +23,7 @@ class StatsStore {
 	const METRIC_SIGNUPS     = 'signups';
 	const METRIC_VERIFIED    = 'verified';
 	const METRIC_FIRST_LOGIN = 'first_login';
+	const METRIC_CONVERTED   = 'converted';
 	const METRIC_ACTIVE      = 'active';
 
 	/* Dimensions. */
@@ -34,6 +35,7 @@ class StatsStore {
 	const DIM_DEVICE   = 'device';
 	const DIM_ROLE     = 'role';
 	const DIM_ORIGIN   = 'origin';
+	const DIM_WINDOW   = 'window';
 
 	/**
 	 * Replace every row in a date range for the given metrics.

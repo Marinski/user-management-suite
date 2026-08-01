@@ -9,7 +9,10 @@ namespace Marinski\UserManagementSuite\Modules\Insights;
 
 use Marinski\UserManagementSuite\Modules\AbstractModule;
 use Marinski\UserManagementSuite\Modules\Insights\Reports\AcquisitionReport;
+use Marinski\UserManagementSuite\Modules\Insights\Reports\EmailHealthReport;
+use Marinski\UserManagementSuite\Modules\Insights\Reports\FunnelReport;
 use Marinski\UserManagementSuite\Modules\Insights\Reports\GrowthReport;
+use Marinski\UserManagementSuite\Modules\Insights\Reports\RetentionReport;
 use Marinski\UserManagementSuite\Settings\Fields;
 use Marinski\UserManagementSuite\Settings\ProvidesSettings;
 use Marinski\UserManagementSuite\Settings\SettingsRepository;
@@ -47,6 +50,9 @@ class InsightsModule extends AbstractModule implements ProvidesSettings {
 
 		add_action( 'ums_insights_render_growth', array( GrowthReport::class, 'render' ) );
 		add_action( 'ums_insights_render_acquisition', array( AcquisitionReport::class, 'render' ) );
+		add_action( 'ums_insights_render_funnel', array( FunnelReport::class, 'render' ) );
+		add_action( 'ums_insights_render_retention', array( RetentionReport::class, 'render' ) );
+		add_action( 'ums_insights_render_email', array( EmailHealthReport::class, 'render' ) );
 
 		if ( is_admin() ) {
 			( new Dashboard() )->register();
@@ -92,6 +98,10 @@ class InsightsModule extends AbstractModule implements ProvidesSettings {
 		$from = wp_date( 'Y-m-d', strtotime( $to . ' -' . ( $days - 1 ) . ' days' ) );
 
 		Aggregator::rebuild( $from, $to );
+
+		// Must run daily to exist at all: last-login is one moving value per user,
+		// so a day not sampled is a day that can never be recovered.
+		Aggregator::snapshot_active( $to );
 	}
 
 	/**

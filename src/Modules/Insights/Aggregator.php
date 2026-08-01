@@ -31,8 +31,22 @@ class Aggregator {
 	 * @return string[]
 	 */
 	public static function metrics() {
-		return array( StatsStore::METRIC_SIGNUPS );
+		return array(
+			StatsStore::METRIC_SIGNUPS,
+			StatsStore::METRIC_VERIFIED,
+			StatsStore::METRIC_FIRST_LOGIN,
+			StatsStore::METRIC_CONVERTED,
+		);
 	}
+
+	/**
+	 * Meta key holding email-verification state, as written by the Verification
+	 * module.
+	 */
+	const META_VERIFIED = '_ums_activation_status';
+
+	/** Meta key holding the last login timestamp, from the Registration module. */
+	const META_LAST_LOGIN = '_ums_last_login';
 
 	/**
 	 * Rebuild rollups for a date range, one month at a time.
@@ -182,12 +196,34 @@ class Aggregator {
 			StatsStore::DIM_ROLE     => self::bucket( isset( $meta['role'] ) ? $meta['role'] : '' ),
 		);
 
-		foreach ( $values as $dimension => $value ) {
-			if ( ! isset( $acc[ $date ][ $dimension ][ $value ] ) ) {
-				$acc[ $date ][ $dimension ][ $value ] = 0;
-			}
+		$metrics = array( StatsStore::METRIC_SIGNUPS );
 
-			++$acc[ $date ][ $dimension ][ $value ];
+		/*
+		 * Funnel steps are attributed to the signup date, not to the date they
+		 * happened. Neither verification state nor last-login carries a timestamp
+		 * of the moment the step was taken, so the only honest reading is a cohort
+		 * one: of the people who joined on this day, how many got this far.
+		 */
+		if ( ! empty( $meta['verified'] ) ) {
+			$metrics[] = StatsStore::METRIC_VERIFIED;
+		}
+
+		if ( ! empty( $meta['logged_in'] ) ) {
+			$metrics[] = StatsStore::METRIC_FIRST_LOGIN;
+		}
+
+		if ( ! empty( $meta['converted'] ) ) {
+			$metrics[] = StatsStore::METRIC_CONVERTED;
+		}
+
+		foreach ( $metrics as $metric ) {
+			foreach ( $values as $dimension => $value ) {
+				if ( ! isset( $acc[ $date ][ $metric ][ $dimension ][ $value ] ) ) {
+					$acc[ $date ][ $metric ][ $dimension ][ $value ] = 0;
+				}
+
+				++$acc[ $date ][ $metric ][ $dimension ][ $value ];
+			}
 		}
 	}
 
@@ -216,16 +252,18 @@ class Aggregator {
 	private static function flatten( array $acc ) {
 		$rows = array();
 
-		foreach ( $acc as $date => $dimensions ) {
-			foreach ( $dimensions as $dimension => $values ) {
-				foreach ( $values as $value => $hits ) {
-					$rows[] = array(
-						'date'      => $date,
-						'metric'    => StatsStore::METRIC_SIGNUPS,
-						'dimension' => $dimension,
-						'value'     => $value,
-						'hits'      => $hits,
-					);
+		foreach ( $acc as $date => $metrics ) {
+			foreach ( $metrics as $metric => $dimensions ) {
+				foreach ( $dimensions as $dimension => $values ) {
+					foreach ( $values as $value => $hits ) {
+						$rows[] = array(
+							'date'      => $date,
+							'metric'    => $metric,
+							'dimension' => $dimension,
+							'value'     => $value,
+							'hits'      => $hits,
+						);
+					}
 				}
 			}
 		}
@@ -247,7 +285,17 @@ class Aggregator {
 		}
 
 		$caps_key = $wpdb->get_blog_prefix() . 'capabilities';
-		$keys     = array( Record::META_FIRST, $caps_key );
+		$keys     = array( Record::META_FIRST, $caps_key, self::META_VERIFIED, self::META_LAST_LOGIN );
+
+		/**
+		 * Filters the user meta keys the aggregator reads.
+		 *
+		 * Integrations that can answer "has this user converted" add their key
+		 * here and pair it with the ums_insights_user_converted filter.
+		 *
+		 * @param string[] $keys Meta keys.
+		 */
+		$keys = array_values( array_unique( (array) apply_filters( 'ums_insights_meta_keys', $keys ) ) );
 
 		$id_placeholders  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		$key_placeholders = implode( ',', array_fill( 0, count( $keys ), '%s' ) );
@@ -264,22 +312,106 @@ class Aggregator {
 		$rows = $wpdb->get_results( $sql );
 
 		$out = array();
+		$raw = array();
 
 		foreach ( (array) $rows as $row ) {
-			$user_id = (int) $row->user_id;
-			$value   = maybe_unserialize( $row->meta_value );
+			$user_id             = (int) $row->user_id;
+			$raw[ $user_id ][ $row->meta_key ] = $row->meta_value;
+			$value               = maybe_unserialize( $row->meta_value );
 
-			if ( Record::META_FIRST === $row->meta_key ) {
-				$out[ $user_id ]['attribution'] = is_array( $value ) ? $value : array();
-				continue;
-			}
+			switch ( $row->meta_key ) {
+				case Record::META_FIRST:
+					$out[ $user_id ]['attribution'] = is_array( $value ) ? $value : array();
+					break;
 
-			// wp_capabilities is a role => bool map; the first key is the primary role.
-			if ( is_array( $value ) && array() !== $value ) {
-				$roles                  = array_keys( $value );
-				$out[ $user_id ]['role'] = (string) reset( $roles );
+				case self::META_VERIFIED:
+					// Absent meta means not verified; only an explicit '1' counts.
+					$out[ $user_id ]['verified'] = ( '1' === (string) $value );
+					break;
+
+				case self::META_LAST_LOGIN:
+					$out[ $user_id ]['logged_in'] = ( (int) $value > 0 );
+					break;
+
+				case $caps_key:
+					// wp_capabilities is a role => bool map; the first key is primary.
+					if ( is_array( $value ) && array() !== $value ) {
+						$roles                   = array_keys( $value );
+						$out[ $user_id ]['role'] = (string) reset( $roles );
+					}
+					break;
 			}
 		}
+
+		foreach ( array_keys( $out ) as $user_id ) {
+			/**
+			 * Filters whether a user counts as converted for the funnel report.
+			 *
+			 * Left to integrations on purpose: what "converted" means — an order, a
+			 * subscription, an enrolment — is a property of the site, not of user
+			 * management, and guessing it wrong would put a confidently wrong number
+			 * on a dashboard.
+			 *
+			 * @param bool                 $converted Whether the user converted.
+			 * @param int                  $user_id   User id.
+			 * @param array<string,string> $meta      Raw meta fetched for this user.
+			 */
+			$out[ $user_id ]['converted'] = (bool) apply_filters(
+				'ums_insights_user_converted',
+				false,
+				$user_id,
+				isset( $raw[ $user_id ] ) ? $raw[ $user_id ] : array()
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Record how many users were recently active, as of today.
+	 *
+	 * This one cannot be rebuilt from history: last-login is a single moving
+	 * value, so yesterday's active count is unknowable once yesterday has
+	 * passed. Taking a snapshot each night is the only way the series can exist
+	 * at all, which is why it is separate from the cohort rebuild.
+	 *
+	 * @param string|null $date Date to record against, defaults to today.
+	 * @return array<string,int> window => count.
+	 */
+	public static function snapshot_active( $date = null ) {
+		global $wpdb;
+
+		$date = $date ? $date : wp_date( 'Y-m-d' );
+		$now  = time();
+		$out  = array();
+		$rows = array();
+
+		foreach ( array(
+			'd1'  => DAY_IN_SECONDS,
+			'd7'  => 7 * DAY_IN_SECONDS,
+			'd30' => 30 * DAY_IN_SECONDS,
+			'd90' => 90 * DAY_IN_SECONDS,
+		) as $window => $seconds ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$count = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->usermeta} WHERE meta_key = %s AND CAST(meta_value AS UNSIGNED) >= %d",
+					self::META_LAST_LOGIN,
+					$now - $seconds
+				)
+			);
+
+			$out[ $window ] = $count;
+			$rows[]         = array(
+				'date'      => $date,
+				'metric'    => StatsStore::METRIC_ACTIVE,
+				'dimension' => StatsStore::DIM_WINDOW,
+				'value'     => $window,
+				'hits'      => $count,
+			);
+		}
+
+		StatsStore::replace_range( $date, $date, array( StatsStore::METRIC_ACTIVE ), $rows );
 
 		return $out;
 	}

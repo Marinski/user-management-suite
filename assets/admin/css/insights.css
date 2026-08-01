@@ -136,6 +136,59 @@
 	white-space: nowrap;
 }
 
+/* Activation funnel. The bar sits behind the text so a very narrow final step
+   still shows its label. */
+.ums-funnel-step {
+	position: relative;
+	margin-bottom: 8px;
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.ums-funnel-bar {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	background: #2271b1;
+	opacity: 0.14;
+}
+
+.ums-funnel-label,
+.ums-funnel-value,
+.ums-funnel-share {
+	position: relative;
+}
+
+.ums-funnel-label {
+	display: inline-block;
+	min-width: 220px;
+	font-weight: 600;
+}
+
+.ums-funnel-value {
+	display: inline-block;
+	min-width: 90px;
+	font-size: 16px;
+}
+
+.ums-funnel-share {
+	color: #646970;
+}
+
+.ums-funnel-step-share {
+	color: #8c8f94;
+}
+
+@media screen and ( max-width: 782px ) {
+	.ums-funnel-label {
+		display: block;
+		min-width: 0;
+	}
+}
+
 .ums-footnote {
 	margin-top: 24px;
 	color: #646970;

@@ -9,7 +9,10 @@ namespace Marinski\UserManagementSuite\Modules\Insights;
 
 use Marinski\UserManagementSuite\Modules\Attribution\ChannelMap;
 use Marinski\UserManagementSuite\Modules\Insights\Reports\AcquisitionReport;
+use Marinski\UserManagementSuite\Modules\Insights\Reports\EmailHealthReport;
+use Marinski\UserManagementSuite\Modules\Insights\Reports\FunnelReport;
 use Marinski\UserManagementSuite\Modules\Insights\Reports\GrowthReport;
+use Marinski\UserManagementSuite\Modules\Insights\Reports\RetentionReport;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -59,6 +62,9 @@ class Dashboard {
 		$tabs = array(
 			'growth'      => __( 'Growth', 'user-management-suite' ),
 			'acquisition' => __( 'Acquisition', 'user-management-suite' ),
+			'funnel'      => __( 'Activation', 'user-management-suite' ),
+			'retention'   => __( 'Retention', 'user-management-suite' ),
+			'email'       => __( 'Email health', 'user-management-suite' ),
 		);
 
 		/**
@@ -307,9 +313,16 @@ class Dashboard {
 		$range   = Range::from_request( $request );
 		$report  = isset( $request['report'] ) ? sanitize_key( (string) $request['report'] ) : 'growth';
 
-		$rows = 'acquisition' === $report
-			? AcquisitionReport::csv_rows( $range )
-			: GrowthReport::csv_rows( $range );
+		$exporters = array(
+			'growth'      => array( GrowthReport::class, 'csv_rows' ),
+			'acquisition' => array( AcquisitionReport::class, 'csv_rows' ),
+			'funnel'      => array( FunnelReport::class, 'csv_rows' ),
+			'retention'   => array( RetentionReport::class, 'csv_rows' ),
+			'email'       => array( EmailHealthReport::class, 'csv_rows' ),
+		);
+
+		$callback = isset( $exporters[ $report ] ) ? $exporters[ $report ] : $exporters['growth'];
+		$rows     = call_user_func( $callback, $range );
 
 		$filename = sprintf( 'ums-%s-%s-to-%s.csv', $report, $range->from, $range->to );
 
