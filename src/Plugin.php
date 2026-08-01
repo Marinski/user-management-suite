@@ -21,6 +21,7 @@ use Marinski\UserManagementSuite\Modules\Verification\VerificationModule;
 use Marinski\UserManagementSuite\Modules\ImportExport\ImportExportModule;
 use Marinski\UserManagementSuite\Modules\Attribution\AttributionModule;
 use Marinski\UserManagementSuite\Modules\Insights\InsightsModule;
+use Marinski\UserManagementSuite\Modules\Notifications\NotificationsModule;
 use Marinski\UserManagementSuite\Support\Privacy;
 use Marinski\UserManagementSuite\Support\Schema;
 use Marinski\UserManagementSuite\Cli\Commands;
@@ -154,6 +155,7 @@ final class Plugin {
 			new ImportExportModule( $this->settings ),
 			new AttributionModule( $this->settings ),
 			new InsightsModule( $this->settings ),
+			new NotificationsModule( $this->settings ),
 		);
 
 		/**

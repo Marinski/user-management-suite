@@ -54,6 +54,12 @@ spl_autoload_register(
 );
 
 // ---------------------------------------------------------------------------
+// Public helper functions (available even when their module is switched off,
+// so calling code never has to guard for it).
+// ---------------------------------------------------------------------------
+require_once UMS_PLUGIN_DIR . 'src/functions.php';
+
+// ---------------------------------------------------------------------------
 // Lifecycle hooks.
 // ---------------------------------------------------------------------------
 register_activation_hook( __FILE__, array( Activator::class, 'activate' ) );
