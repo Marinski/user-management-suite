@@ -50,6 +50,14 @@ class NotificationsModule extends AbstractModule implements ProvidesSettings {
 			( new WooCommerceAdapter() )->register();
 		}
 
+		( new Unsubscribe() )->register();
+		( new RestController() )->register();
+		( new Shortcode() )->register();
+
+		if ( $this->settings->get( 'notifications', 'log_sends', true ) ) {
+			( new Log() )->register();
+		}
+
 		if ( is_admin() ) {
 			add_action( 'show_user_profile', array( $this, 'render_profile_panel' ) );
 			add_action( 'edit_user_profile', array( $this, 'render_profile_panel' ) );
@@ -118,6 +126,46 @@ class NotificationsModule extends AbstractModule implements ProvidesSettings {
 			<?php endforeach; ?>
 		</table>
 		<?php
+		$this->render_recent_sends( (int) $user->ID );
+	}
+
+	/**
+	 * Show what has actually gone out to this user.
+	 *
+	 * The preference list says what should happen; this says what did. Support
+	 * questions are almost always about the second one.
+	 *
+	 * @param int $user_id User id.
+	 * @return void
+	 */
+	private function render_recent_sends( $user_id ) {
+		if ( ! Log::enabled() ) {
+			return;
+		}
+
+		$entries = Log::for_user( $user_id, 15 );
+
+		if ( array() === $entries ) {
+			return;
+		}
+
+		$types = Registry::types();
+
+		echo '<table class="widefat striped" style="max-width:640px;margin-bottom:20px;">';
+		echo '<thead><tr><th>' . esc_html__( 'Recently sent', 'user-management-suite' ) . '</th>'
+			. '<th>' . esc_html__( 'When', 'user-management-suite' ) . '</th>'
+			. '<th>' . esc_html__( 'Result', 'user-management-suite' ) . '</th></tr></thead><tbody>';
+
+		foreach ( $entries as $entry ) {
+			$label = isset( $types[ $entry->type ] ) ? $types[ $entry->type ]['label'] : $entry->type;
+			$stamp = strtotime( $entry->sent_at . ' UTC' );
+
+			echo '<tr><td>' . esc_html( $label ) . '</td><td>'
+				. esc_html( $stamp ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $stamp ) : $entry->sent_at )
+				. '</td><td>' . esc_html( $entry->status ) . '</td></tr>';
+		}
+
+		echo '</tbody></table>';
 	}
 
 	/**
@@ -243,6 +291,33 @@ class NotificationsModule extends AbstractModule implements ProvidesSettings {
 		);
 		Fields::row_end();
 
+		Fields::row_start( __( 'Preference page', 'user-management-suite' ) );
+		Fields::page_select( 'notifications', 'preferences_page', (int) $settings->get( 'notifications', 'preferences_page', 0 ) );
+		echo '<p class="description">'
+			. esc_html__( 'A page containing the [ums_preferences] shortcode. Unsubscribe pages link to it so people can choose individually instead of switching everything off.', 'user-management-suite' )
+			. '</p>';
+		Fields::row_end();
+
+		Fields::row_start( __( 'Send log', 'user-management-suite' ) );
+		Fields::checkbox(
+			'notifications',
+			'log_sends',
+			$settings->get( 'notifications', 'log_sends', true ),
+			__( 'Record which notifications were sent to whom', 'user-management-suite' ),
+			__( 'Stores only the recipient, type, time and outcome — never message content.', 'user-management-suite' )
+		);
+		echo '<p>';
+		Fields::text( 'notifications', 'log_retention_days', $settings->get( 'notifications', 'log_retention_days', 90 ), '90', 'number' );
+		echo ' <span class="description">' . esc_html__( 'days to keep entries (0 keeps them indefinitely).', 'user-management-suite' ) . '</span></p>';
+		echo '<p class="description">' . esc_html(
+			sprintf(
+				/* translators: %s: number of log entries. */
+				__( 'Currently holding %s entries.', 'user-management-suite' ),
+				number_format_i18n( Log::count() )
+			)
+		) . '</p>';
+		Fields::row_end();
+
 		Fields::row_start( __( 'Registered types', 'user-management-suite' ) );
 		$this->render_type_summary();
 		Fields::row_end();
@@ -305,6 +380,9 @@ class NotificationsModule extends AbstractModule implements ProvidesSettings {
 				array(
 					'enable_core'        => ! empty( $in['enable_core'] ),
 					'enable_woocommerce' => ! empty( $in['enable_woocommerce'] ),
+					'log_sends'          => ! empty( $in['log_sends'] ),
+					'log_retention_days' => max( 0, min( 3650, (int) ( $in['log_retention_days'] ?? 90 ) ) ),
+					'preferences_page'   => max( 0, (int) ( $in['preferences_page'] ?? 0 ) ),
 				)
 			),
 		);
