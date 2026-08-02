@@ -54,7 +54,7 @@ class Capture {
 
 		$referrer = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
 		$host     = '' !== $referrer ? wp_parse_url( $referrer, PHP_URL_HOST ) : '';
-		$external = $host && ! self::is_internal( (string) $host );
+		$external = $host && ! self::is_internal( (string) $host ) && ! self::is_auth_provider( (string) $host );
 
 		/*
 		 * Only an external referrer is kept. Storing an internal one would make
@@ -291,8 +291,26 @@ class Capture {
 
 		$touches = self::resolve_touches( $explicit );
 
+		/*
+		 * No campaign parameters and no external referrer means the visitor typed
+		 * the address, used a bookmark, or came from somewhere that strips the
+		 * referrer. That is direct traffic, and it is recorded as such.
+		 *
+		 * Storing nothing would be worse than storing this: the reports separate
+		 * "arrived directly" from "nothing was recorded", and leaving direct
+		 * visitors out would collapse a real answer into the missing-data bucket
+		 * and make coverage look like it was falling.
+		 */
 		if ( ! self::has_signal( $touches['first'] ) && ! self::has_signal( $touches['last'] ) ) {
-			return;
+			$direct = $touches['first'];
+
+			$direct['type']    = 'typein';
+			$direct['channel'] = ChannelMap::DIRECT;
+
+			$touches = array(
+				'first' => $direct,
+				'last'  => $direct,
+			);
 		}
 
 		// Never overwrite a first touch: it is a claim about a moment that has
@@ -354,6 +372,48 @@ class Capture {
 		}
 
 		return ( is_ssl() ? 'https://' : 'http://' ) . $host . $uri;
+	}
+
+	/**
+	 * Whether a host is an identity provider mid-login rather than a real source.
+	 *
+	 * A social sign-in bounces the visitor through the provider and back, so the
+	 * referrer on the return leg is the provider's domain. Treating that as
+	 * acquisition would credit the login button for the visit — and because
+	 * `accounts.google.com` reduces to "google", it would land in organic search
+	 * and quietly inflate SEO numbers with people who simply clicked "Sign in
+	 * with Google".
+	 *
+	 * @param string $host Referring host.
+	 * @return bool
+	 */
+	private static function is_auth_provider( $host ) {
+		$host = strtolower( $host );
+
+		$providers = array(
+			'accounts.google.com',
+			'appleid.apple.com',
+			'login.microsoftonline.com',
+			'login.live.com',
+			'login.yahoo.com',
+			'oauth.telegram.org',
+			'www.paypal.com',
+			'checkout.stripe.com',
+		);
+
+		/**
+		 * Filters the hosts treated as identity providers rather than traffic sources.
+		 *
+		 * Bare social domains are deliberately absent: facebook.com is a genuine
+		 * referrer as often as it is a login hop, so only unambiguous auth and
+		 * payment-return hosts belong here.
+		 *
+		 * @param string[] $providers Host names.
+		 * @param string   $host      Host being checked.
+		 */
+		$providers = (array) apply_filters( 'ums_attribution_auth_providers', $providers, $host );
+
+		return in_array( $host, $providers, true );
 	}
 
 	/**

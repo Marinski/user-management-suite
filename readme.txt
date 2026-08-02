@@ -4,7 +4,7 @@ Tags: users, user registration, email verification, notification preferences, us
 Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -112,6 +112,10 @@ Acquisition tracking can be gated behind a consent platform via the
 answers that filter, no tracking happens at all.
 
 == Changelog ==
+
+= 1.1.1 =
+* Fixed: a social sign-in bounces the visitor through the identity provider, so the referrer on the return leg was the provider's domain. `accounts.google.com` reduces to "google" and was landing in organic search, crediting SEO for people who clicked "Sign in with Google". Identity-provider and payment-return hosts are now ignored as sources, filterable via `ums_attribution_auth_providers`.
+* Fixed: visitors with no referrer and no campaign parameters produced no record at all, so direct traffic was reported as "not recorded". Direct traffic is now stored as direct, keeping it distinct from missing data.
 
 = 1.1.0 =
 * New: Acquisition Tracking module — landing-page capture of campaign parameters and referrer, first and last touch per user, channel classification, REST endpoint for decoupled front ends, and an importer for existing WooCommerce order attribution.
