@@ -84,7 +84,17 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 		add_filter( 'authenticate', array( $this, 'block_unverified' ), 30 );
 		add_action( 'init', array( $this, 'maybe_verify' ) );
 		add_action( 'init', array( $this, 'maybe_resend' ) );
+		add_filter( 'login_message', array( $this, 'login_notice' ) );
 		add_shortcode( 'ums_resend_verification', array( $this, 'resend_shortcode' ) );
+
+		// Require a verified email before an account can place its first order.
+		add_action( 'woocommerce_after_checkout_validation', array( $this, 'block_unverified_checkout' ), 20, 2 );
+
+		// Resend verification over REST for decoupled front ends (tracker app, etc.).
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+
+		// Surface the reason + resend form on the My Account dashboard.
+		add_action( 'woocommerce_account_dashboard', array( $this, 'account_verification_notice' ), 5 );
 
 		// Spam + reCAPTCHA on the registration/login/lost-password forms.
 		add_filter( 'registration_errors', array( $this, 'registration_errors' ), 10, 3 );
@@ -170,13 +180,57 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 
 		$status = get_user_meta( $user->ID, self::META_STATUS, true );
 		if ( '0' === (string) $status ) {
-			return new \WP_Error(
-				'ums_unverified',
-				__( '<strong>Error</strong>: Your email address has not been verified yet. Please check your inbox for the verification link.', 'user-management-suite' )
-			);
+			$message = __( '<strong>Error</strong>: Your email address has not been verified yet. Please check your inbox for the verification link.', 'user-management-suite' );
+
+			/**
+			 * Filters the error shown when an unverified user tries to log in.
+			 *
+			 * Lets a site point the user at a resend-verification form instead of
+			 * leaving them at a dead end.
+			 *
+			 * @param string   $message Error message (may contain limited HTML).
+			 * @param \WP_User $user    The user being blocked.
+			 */
+			$message = apply_filters( 'ums_unverified_login_message', $message, $user );
+
+			return new \WP_Error( 'ums_unverified', $message );
 		}
 
 		return $user;
+	}
+
+	/**
+	 * Whether a user's email is verified.
+	 *
+	 * A lenient check: only an explicit '0' means unverified — an account with
+	 * no status meta at all (created before verification was enforced, or whose
+	 * key was stripped) is treated as verified rather than locked out.
+	 *
+	 * @param int $user_id User id.
+	 * @return bool
+	 */
+	public function is_verified( $user_id ) {
+		return '0' !== (string) get_user_meta( (int) $user_id, self::META_STATUS, true );
+	}
+
+	/**
+	 * (Re)issue a verification key and email it to a user.
+	 *
+	 * Shared by the front-end resend form ({@see maybe_resend()}) and the REST
+	 * resend endpoint. Rotating the key invalidates any older, already-sent link.
+	 *
+	 * @param \WP_User $user User to verify.
+	 * @return bool Whether the mail was accepted by the transport.
+	 */
+	public function resend( \WP_User $user ) {
+		if ( ! $this->settings->get( 'verification', 'require_email_verification', true ) ) {
+			return false;
+		}
+
+		$key = wp_generate_password( 32, false );
+		update_user_meta( $user->ID, self::META_KEY, $key );
+
+		return $this->mailer->send_verification( $user, $key );
 	}
 
 	/**
@@ -199,25 +253,104 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 		$stored = (string) get_user_meta( $uid, self::META_KEY, true );
 
 		if ( '' === $stored || ! hash_equals( $stored, $key ) ) {
-			wp_safe_redirect( add_query_arg( 'ums_verified', 'invalid', wp_login_url() ) );
-			exit;
+			// The key is spent. If this account is already verified the link was
+			// simply followed twice — by the user, or by a mail client or security
+			// scanner that prefetched it. Treat that as success rather than telling
+			// a verified user their link is invalid.
+			if ( '1' !== (string) get_user_meta( $uid, self::META_STATUS, true ) ) {
+				wp_safe_redirect( add_query_arg( 'ums_verified', 'invalid', wp_login_url() ) );
+				exit;
+			}
+		} else {
+			update_user_meta( $uid, self::META_STATUS, '1' );
+			delete_user_meta( $uid, self::META_KEY );
+
+			do_action( 'ums_email_verified', $uid );
 		}
 
-		update_user_meta( $uid, self::META_STATUS, '1' );
-		delete_user_meta( $uid, self::META_KEY );
+		$auto_login = (bool) $this->settings->get( 'verification', 'auto_login_after_verify', true );
 
-		do_action( 'ums_email_verified', $uid );
+		/**
+		 * Filters whether verifying should also log the user in.
+		 *
+		 * A verification link that logs you in is a login link. Sites that mail
+		 * these links in bulk, or store them outside WordPress, will want to turn
+		 * this off for those links specifically.
+		 *
+		 * @param bool $auto_login Whether to log the user in.
+		 * @param int  $uid        Verified user id.
+		 */
+		$auto_login = (bool) apply_filters( 'ums_auto_login_after_verify', $auto_login, $uid );
 
-		if ( $this->settings->get( 'verification', 'auto_login_after_verify', true ) && ! is_user_logged_in() ) {
+		if ( $auto_login && ! is_user_logged_in() ) {
 			wp_set_current_user( $uid );
 			wp_set_auth_cookie( $uid );
 		}
 
-		$redirect_id = (int) $this->settings->get( 'verification', 'redirect_page_id', 0 );
-		$redirect    = $redirect_id ? get_permalink( $redirect_id ) : add_query_arg( 'ums_verified', 'success', wp_login_url() );
-
-		wp_safe_redirect( $redirect ? $redirect : home_url( '/' ) );
+		wp_safe_redirect( $this->verified_redirect( $uid ) );
 		exit;
+	}
+
+	/**
+	 * Where to send a user once their email is verified.
+	 *
+	 * Falls back to the login screen only when the user is not logged in —
+	 * showing a password prompt to someone who was just logged in reads as a
+	 * failure, which is the opposite of what happened.
+	 *
+	 * @param int $uid Verified user id.
+	 * @return string
+	 */
+	private function verified_redirect( $uid ) {
+		$redirect_id = (int) $this->settings->get( 'verification', 'redirect_page_id', 0 );
+		$redirect    = $redirect_id ? get_permalink( $redirect_id ) : '';
+
+		if ( ! $redirect ) {
+			$redirect = is_user_logged_in()
+				? home_url( '/' )
+				: add_query_arg( 'ums_verified', 'success', wp_login_url() );
+		}
+
+		/**
+		 * Filters where a user lands after verifying their email address.
+		 *
+		 * @param string $redirect Destination URL.
+		 * @param int    $uid      Verified user id.
+		 */
+		$redirect = (string) apply_filters( 'ums_verified_redirect', $redirect, $uid );
+
+		return $redirect ? $redirect : home_url( '/' );
+	}
+
+	/**
+	 * Show the outcome of a verification or resend attempt on the login screen.
+	 *
+	 * Without this the `ums_verified` flag is set on the redirect and then never
+	 * rendered, so the user is returned to a bare login form with no indication
+	 * that anything happened.
+	 *
+	 * @param string $message Existing login message markup.
+	 * @return string
+	 */
+	public function login_notice( $message ) {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Display-only flags on a redirect.
+		$verified = isset( $_GET['ums_verified'] ) ? sanitize_key( wp_unslash( $_GET['ums_verified'] ) ) : '';
+		$resent   = ! empty( $_GET['ums_resent'] );
+		// phpcs:enable
+
+		// WordPress styles every `.message` identically, so success and failure
+		// read the same. The extra class lets a theme tell them apart.
+		if ( 'success' === $verified ) {
+			$message .= '<p class="message ums-message-success">' . esc_html__( 'Your email address is verified. You can now log in.', 'user-management-suite' ) . '</p>';
+		} elseif ( 'invalid' === $verified ) {
+			$message .= '<p class="message ums-message-warning">' . esc_html__( 'That verification link is no longer valid. Request a new one below, or reset your password if you already have an account.', 'user-management-suite' ) . '</p>';
+		}
+
+		if ( $resent ) {
+			$message .= '<p class="message ums-message-info">' . esc_html__( 'If an account with that email needs verification, a new link has been sent.', 'user-management-suite' ) . '</p>';
+		}
+
+		return $message;
 	}
 
 	/**
@@ -240,9 +373,7 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 
 		// Always behave the same to avoid disclosing which emails exist.
 		if ( $user && '0' === (string) get_user_meta( $user->ID, self::META_STATUS, true ) ) {
-			$key = wp_generate_password( 32, false );
-			update_user_meta( $user->ID, self::META_KEY, $key );
-			$this->mailer->send_verification( $user, $key );
+			$this->resend( $user );
 		}
 
 		wp_safe_redirect( add_query_arg( 'ums_resent', '1', wp_get_referer() ? wp_get_referer() : home_url( '/' ) ) );
@@ -255,6 +386,19 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 	 * @return string
 	 */
 	public function resend_shortcode() {
+		// Render nothing for anyone who has nothing to resend. The shortcode
+		// commonly sits on the account page, and WooCommerce reuses that page
+		// for every account endpoint — so an unconditional form followed a
+		// verified, logged-in member around the whole dashboard.
+		if ( is_user_logged_in() ) {
+			$user = wp_get_current_user();
+
+			if ( $this->is_excluded( $user )
+				|| '0' !== (string) get_user_meta( $user->ID, self::META_STATUS, true ) ) {
+				return '';
+			}
+		}
+
 		ob_start();
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only flag.
@@ -262,6 +406,9 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 			echo '<p class="ums-notice">' . esc_html__( 'If an account with that email needs verification, a new link has been sent.', 'user-management-suite' ) . '</p>';
 		}
 		?>
+		<div class="ums-resend">
+			<h3 class="ums-resend__title"><?php esc_html_e( 'Confirm your email address', 'user-management-suite' ); ?></h3>
+			<p class="ums-resend__intro"><?php esc_html_e( 'Your account still needs email confirmation. If the link never arrived or has expired, request a new one below.', 'user-management-suite' ); ?></p>
 		<form method="post" class="ums-resend-form">
 			<?php wp_nonce_field( self::NONCE_RESEND, self::NONCE_RESEND ); ?>
 			<p>
@@ -270,8 +417,337 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 			</p>
 			<p><button type="submit"><?php esc_html_e( 'Resend verification email', 'user-management-suite' ); ?></button></p>
 		</form>
+		</div>
 		<?php
 		return (string) ob_get_clean();
+	}
+
+	// ---------------------------------------------------------------------
+	// Resend via REST.
+	// ---------------------------------------------------------------------
+
+	/**
+	 * Register the resend REST route.
+	 *
+	 * Consumed by decoupled front ends (e.g. the Account Tracker app) so a user
+	 * who hits the "email not verified" wall can re-trigger the email without
+	 * leaving the app. Public by design (no logged-in user exists yet).
+	 *
+	 * @return void
+	 */
+	public function register_rest_routes() {
+		register_rest_route(
+			'ums/v1',
+			'/verification/resend',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'rest_resend' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'email' => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_email',
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * POST /ums/v1/verification/resend — (re)send the verification email.
+	 *
+	 * Response is identical whether or not the email belongs to a verified,
+	 * unverified, or non-existent account, so callers cannot enumerate which
+	 * addresses hold accounts.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function rest_resend( \WP_REST_Request $request ) {
+		if ( ! $this->settings->get( 'verification', 'require_email_verification', true ) ) {
+			return new \WP_Error( 'ums_verification_disabled', __( 'Email verification is not required on this site.', 'user-management-suite' ), array( 'status' => 400 ) );
+		}
+
+		$email = sanitize_email( (string) $request->get_param( 'email' ) );
+		if ( ! is_email( $email ) ) {
+			return new \WP_Error( 'ums_invalid_email', __( 'Please provide a valid email address.', 'user-management-suite' ), array( 'status' => 400 ) );
+		}
+
+		if ( ! $this->resend_rate_ok( $email ) ) {
+			return new \WP_Error( 'ums_resend_rate_limited', __( 'Too many resend requests. Please try again in a few minutes.', 'user-management-suite' ), array( 'status' => 429 ) );
+		}
+
+		$user = get_user_by( 'email', $email );
+		$sent = false;
+		if ( $user && '0' === (string) get_user_meta( $user->ID, self::META_STATUS, true ) ) {
+			$sent = (bool) $this->resend( $user );
+		}
+
+		// Response is identical whatever the account state. The only signal a
+		// caller could otherwise use is timing — a real send round-trips through
+		// the mail transport while the no-op branches return instantly. Blunt
+		// that side channel with a jittered stall when no mail is dispatched.
+		if ( ! $sent ) {
+			usleep( wp_rand( 80000, 250000 ) );
+		}
+
+		return new \WP_REST_Response(
+			array(
+				'success' => true,
+				'message' => __( 'If an account with that email needs verification, a new link has been sent.', 'user-management-suite' ),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Best-effort real client IP (Cloudflare-aware).
+	 *
+	 * This site is fronted by Cloudflare, so REMOTE_ADDR is usually the edge
+	 * pool, not the visitor. The connecting-IP header is the authoritative value
+	 * there. Falls back to REMOTE_ADDR otherwise.
+	 *
+	 * @return string
+	 */
+	private function client_ip() {
+		if ( ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) {
+			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
+		}
+
+		return isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
+	}
+
+	/**
+	 * Rate-limit the REST resend endpoint.
+	 *
+	 * Two independent budgets, both on a 15-minute window, so rotating emails
+	 * from one client cannot bypass the mail budget:
+	 *  - per (client + email): 3 requests.
+	 *  - per client: 20 requests aggregate.
+	 *
+	 * @param string $email Sanitized email.
+	 * @return bool Whether the request is within the limits.
+	 */
+	private function resend_rate_ok( $email ) {
+		$ip         = $this->client_ip();
+		$email      = strtolower( $email );
+		$key        = 'ums_resend_' . md5( $ip . '|' . $email );
+		$per_ip_key = 'ums_resend_ip_' . md5( $ip );
+
+		$per_pair = (int) get_transient( $key );
+		$per_ip   = (int) get_transient( $per_ip_key );
+
+		if ( $per_pair >= 3 || $per_ip >= 20 ) {
+			return false;
+		}
+
+		set_transient( $key, $per_pair + 1, 15 * MINUTE_IN_SECONDS );
+		set_transient( $per_ip_key, $per_ip + 1, 15 * MINUTE_IN_SECONDS );
+
+		return true;
+	}
+
+	// ---------------------------------------------------------------------
+	// Checkout gate.
+	// ---------------------------------------------------------------------
+
+	/**
+	 * Require a verified email before an account can place an order.
+	 *
+	 * Runs on woocommerce_after_checkout_validation — before the order or account
+	 * is created — and aborts placement via the shared WP_Error.
+	 *
+	 * Note: this action only fires for the core/WooCommerce-shortcode checkout,
+	 * not the Cart & Checkout blocks / Store API. The store currently uses the
+	 * shortcode checkout; migrating to the blocks checkout would bypass this
+	 * gate until an equivalent Store API guard is added.
+	 *
+	 * @param array     $data   Posted checkout data.
+	 * @param \WP_Error $errors Validation errors collector.
+	 * @return void
+	 */
+	public function block_unverified_checkout( $data, $errors ) {
+		if ( ! $this->settings->get( 'verification', 'require_email_verification', true ) ) {
+			return;
+		}
+
+		$required = apply_filters( 'ums_require_verified_checkout', true, $data );
+		if ( ! $required ) {
+			return;
+		}
+
+		$user = wp_get_current_user();
+
+		// Returning / logged-in user: block until their email is verified.
+		if ( $user && $user->exists() ) {
+			if ( $this->is_excluded( $user ) || $this->is_verified( $user->ID ) ) {
+				return;
+			}
+
+			$message = apply_filters( 'ums_unverified_checkout_message', $this->checkout_not_verified_message(), $user->ID );
+			$errors->add( 'ums_email_unverified_checkout', $message );
+
+			return;
+		}
+
+		// Logged-out visitor. With guest checkout disabled this checkout will
+		// create a WP account mid-flow (is_registration_required() is true) — and
+		// that account starts unverified, reproducing the "paid but locked out"
+		// incident. Enforce register-then-verify even though no checkbox is posted.
+		$creates_account = ! empty( $data['createaccount'] );
+		if ( ! $creates_account && function_exists( 'WC' ) ) {
+			$checkout = WC()->checkout();
+			if ( $checkout && $checkout->is_registration_required() ) {
+				$creates_account = true;
+			}
+		}
+
+		if ( $creates_account ) {
+			$this->create_unverified_customer( $data, $errors );
+
+			return;
+		}
+
+		// Genuine guest checkout (guest mode enabled): still fail closed when the
+		// posted billing email belongs to an existing unverified account.
+		$email = isset( $data['billing_email'] ) ? sanitize_email( (string) $data['billing_email'] ) : '';
+		$guest = $email ? get_user_by( 'email', $email ) : false;
+		if ( $guest && ! $this->is_excluded( $guest ) && ! $this->is_verified( $guest->ID ) ) {
+			$message = apply_filters( 'ums_unverified_checkout_message', $this->checkout_not_verified_message(), $guest->ID );
+			$errors->add( 'ums_email_unverified_checkout', $message );
+		}
+	}
+
+	/**
+	 * Message shown to a logged-in buyer whose email is not verified.
+	 *
+	 * @return string
+	 */
+	private function checkout_not_verified_message() {
+		$url  = ums_verification_resend_url();
+		$link = $url ? '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Verify your email', 'user-management-suite' ) . '</a>' : '';
+
+		// phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment -- translators note below.
+		/* translators: 1: verification page link. */
+		$message = __( 'Your email address has not been verified yet, so you cannot complete this order yet. Check your inbox (and spam folder) for the verification email we sent when you registered, or request a new one here: %1$s.', 'user-management-suite' );
+
+		return sprintf( $message, $link );
+	}
+
+	/**
+	 * Create the account that a logged-out buyer's checkout would otherwise
+	 * create mid-flow, so the verification email actually goes out.
+	 *
+	 * On this store guest checkout is off and registration is required, so the
+	 * first-time checkout was expected to create the customer. WooCommerce only
+	 * creates the customer after the order is placed — an order this gate
+	 * prevents. The guest was told to "confirm the email we send you" when no
+	 * email had been sent (no account, no user_register). Creating the customer
+	 * up-front fires user_register -> on_register(), which marks them unverified
+	 * and emails the verification link; the order is still blocked until that
+	 * link is clicked. The cart survives on the same browser session, so the
+	 * buyer can complete after verifying.
+	 *
+	 * @param array     $data   Posted checkout data.
+	 * @param \WP_Error $errors Validation errors collector.
+	 * @return void
+	 */
+	private function create_unverified_customer( $data, $errors ) {
+		$data  = (array) $data;
+		$email = isset( $data['billing_email'] ) ? sanitize_email( (string) $data['billing_email'] ) : '';
+
+		if ( ! is_email( $email ) ) {
+			$errors->add(
+				'ums_email_unverified_checkout_new',
+				__( 'Please enter a valid billing email address so we can create and verify your account.', 'user-management-suite' )
+			);
+
+			return;
+		}
+
+		// The email already belongs to an account — never create a duplicate.
+		// Fail closed unless that account is verified.
+		$existing = get_user_by( 'email', $email );
+		if ( $existing ) {
+			if ( ! $this->is_excluded( $existing ) && ! $this->is_verified( $existing->ID ) ) {
+				$message = apply_filters( 'ums_unverified_checkout_message', $this->checkout_not_verified_message(), $existing->ID );
+				$errors->add( 'ums_email_unverified_checkout', $message );
+			}
+
+			return;
+		}
+
+		if ( ! function_exists( 'wc_create_new_customer' ) ) {
+			$message = apply_filters( 'ums_unverified_checkout_new_account_message', $this->checkout_new_account_message() );
+			$errors->add( 'ums_email_unverified_checkout_new', $message );
+
+			return;
+		}
+
+		$username = '';
+		$password = '';
+		if ( isset( $data['account_username'] ) && '' !== $data['account_username'] ) {
+			$username = sanitize_user( (string) $data['account_username'] );
+		}
+		if ( isset( $data['account_password'] ) && '' !== $data['account_password'] ) {
+			$password = (string) $data['account_password'];
+		}
+
+		$customer_id = wc_create_new_customer( $email, $username, $password );
+
+		if ( is_wp_error( $customer_id ) ) {
+			$errors->add( 'ums_customer_create_failed', $customer_id->get_error_message() );
+
+			return;
+		}
+
+		/**
+		 * Filters the message attached to a first-time checkout. By this point
+		 * the account exists and the verification email has been sent.
+		 *
+		 * @param string $message     Message.
+		 * @param int    $customer_id Created customer id.
+		 * @param string $email       Billing / account email.
+		 */
+		$message = apply_filters( 'ums_unverified_checkout_new_account_message', $this->checkout_new_account_message(), $customer_id, $email );
+		$errors->add( 'ums_email_unverified_checkout_new', $message );
+	}
+
+	/**
+	 * Message shown when a checkout would create a new (unverified) account.
+	 *
+	 * @return string
+	 */
+	private function checkout_new_account_message() {
+		$url  = ums_verification_resend_url();
+		$link = $url ? '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Resend the verification email', 'user-management-suite' ) . '</a>' : '';
+
+		/* translators: 1: verification page link. */
+		$message = __( "We've just created your account and sent a verification link to your email address. Click the link in that email (check your spam folder too) to confirm your address, then return here and complete your order. If it didn't arrive: %1\$s.", 'user-management-suite' );
+
+		return sprintf( $message, $link );
+	}
+
+	// ---------------------------------------------------------------------
+	// Account dashboard.
+	// ---------------------------------------------------------------------
+
+	/**
+	 * Show a notice + the resend form on My Account for unverified users.
+	 *
+	 * @return void
+	 */
+	public function account_verification_notice() {
+		$user = wp_get_current_user();
+		if ( ! $user || ! $user->exists() || $this->is_excluded( $user ) || $this->is_verified( $user->ID ) ) {
+			return;
+		}
+
+		echo '<div class="woocommerce-info">';
+		echo '<p>' . esc_html__( 'Your email address has not been verified yet. Check your inbox (and spam folder) for the verification email, or request a new link below.', 'user-management-suite' ) . '</p>';
+		echo $this->resend_shortcode(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shortcode output is fully escaped in the form template.
+		echo '</div>';
 	}
 
 	// ---------------------------------------------------------------------

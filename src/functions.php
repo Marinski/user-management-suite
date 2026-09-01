@@ -48,3 +48,42 @@ if ( ! function_exists( 'ums_notification_types' ) ) {
 		return Registry::types();
 	}
 }
+
+if ( ! function_exists( 'ums_verification_resend_url' ) ) {
+	/**
+	 * Public URL where a user can (re)send the verification email.
+	 *
+	 * Prefers the site's canonical "confirm your email" page — it holds the
+	 * [ums_resend_verification] shortcode and renders for logged-out users.
+	 * Overridable with the `ums_resend_page_url` filter. Fails closed to the
+	 * site home when no page exists.
+	 *
+	 * @return string
+	 */
+	function ums_verification_resend_url() {
+		$url = (string) apply_filters( 'ums_resend_page_url', '' );
+		if ( '' !== $url ) {
+			return esc_url_raw( $url );
+		}
+
+		foreach ( array( 'confirm-your-email', 'verify-email' ) as $slug ) {
+			$page = get_page_by_path( $slug );
+			if ( $page ) {
+				$pid = (int) $page->ID;
+
+				// Site is multilingual (Polylang): resolve the default-language
+				// page to its translated sibling so users stay in their locale.
+				if ( function_exists( 'pll_get_post' ) && function_exists( 'pll_current_language' ) ) {
+					$translated = pll_get_post( $pid, (string) pll_current_language() );
+					if ( $translated ) {
+						$pid = (int) $translated;
+					}
+				}
+
+				return (string) get_permalink( $pid );
+			}
+		}
+
+		return home_url( '/' );
+	}
+}

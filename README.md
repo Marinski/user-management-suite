@@ -74,10 +74,44 @@ form, or a mailbox provider's RFC 8058 `List-Unsubscribe=One-Click` body.
 | `ums_attribution_payload` | Supply attribution from a custom signup flow. |
 | `ums_insights_user_converted` | Define what "converted" means for the activation funnel. |
 | `ums_insights_tabs` | Add a report tab. |
+| `ums_require_verified_checkout` | Opt a checkout out of the verified-email gate (default `true`). Receives the posted checkout data. |
+| `ums_unverified_checkout_message` | Message shown to a logged-in unverified buyer at checkout. |
+| `ums_unverified_checkout_new_account_message` | Message shown when a checkout would create a new (unverified) account. |
+| `ums_unverified_login_message` | Message an unverified user sees at login (already existed, now also reused by the API path). |
+| `ums_resend_page_url` | Override the page the resend/verify links point to. |
+| `ums_email_verified` | Fired with the user id once their email is verified. |
 
 `ums_notification_allowed( $type_id, $user_id )` is available as a plain
 function even when the module is switched off, so adding the check to existing
 code can never stop mail that used to go out.
+
+### Verified-email checkout gate
+
+When `verification.require_email_verification` is on, an account cannot place a
+WooCommerce order before verifying its email. The gate runs on
+`woocommerce_after_checkout_validation`, so it applies to the classic
+`[woocommerce_checkout]` checkout (not the Cart & Checkout blocks). Logged-out
+visitors are blocked too whenever the checkout will create a WP account
+(guest-checkout-disabled sites), and true guest checkout is fail-closed when the
+billing email belongs to an existing unverified account.
+
+For a first-time (logged-out) buyer the gate does not just block: because
+WooCommerce only creates the customer account *after* order placement, a blocked
+checkout would otherwise leave the buyer with no account and no verification
+email. Instead it creates the customer up-front via `wc_create_new_customer()`
+— which fires `user_register` → `on_register()`, marking the account unverified
+and sending the verification link — and *then* blocks the order until that link
+is confirmed. The cart is preserved on the same browser session, so the buyer
+verifies (auto-login) and completes the checkout. If the billing email already
+belongs to an account, no duplicate is created and the existing unverified
+account is blocked until verified.
+
+### Resend verification over REST
+
+`POST /wp-json/ums/v1/verification/resend` with `{ "email": "..." }` re-sends the
+verification email to an unverified account. Always returns the same generic
+success (no account enumeration), rate-limited per (client, email) and per
+client. `ums_verification_resend_url()` returns the public resend page URL.
 
 ## Development
 
