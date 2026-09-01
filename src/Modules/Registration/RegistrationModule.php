@@ -25,6 +25,7 @@ class RegistrationModule extends AbstractModule implements ProvidesSettings {
 	const META_SOURCE     = '_ums_registration_source';
 	const META_LAST_LOGIN = '_ums_last_login';
 	const META_LAST_IP    = '_ums_last_login_ip';
+	const META_REG_IP     = '_ums_registration_ip';
 
 	const NONCE_PROFILE = 'ums_reg_profile';
 
@@ -48,6 +49,7 @@ class RegistrationModule extends AbstractModule implements ProvidesSettings {
 	public function register() {
 		// Capture data.
 		add_action( 'user_register', array( $this, 'capture_registration' ) );
+		add_action( 'user_register', array( $this, 'record_registration_ip' ), 20 );
 		add_action( 'wp_login', array( $this, 'record_login' ), 10, 2 );
 
 		// Profile screens.
@@ -104,6 +106,28 @@ class RegistrationModule extends AbstractModule implements ProvidesSettings {
 			if ( $host ) {
 				update_user_meta( $user_id, self::META_SOURCE, sanitize_text_field( $host ) );
 			}
+		}
+	}
+
+	/**
+	 * Record the real client IP used to register an account.
+	 *
+	 * Independent of source tracking (which may be superseded by Acquisition).
+	 * Uses the same resolved client IP as the anti-spam IP block; the stored
+	 * value is anonymized when `anonymize_ip` is on (the block itself always
+	 * compares the raw resolved IP).
+	 *
+	 * @param int $user_id New user id.
+	 * @return void
+	 */
+	public function record_registration_ip( $user_id ) {
+		if ( ! $this->settings->get( 'registration', 'track_registration_ip', true ) ) {
+			return;
+		}
+
+		$ip = Security::client_ip( (bool) $this->settings->get( 'registration', 'anonymize_ip', false ) );
+		if ( '' !== $ip ) {
+			update_user_meta( (int) $user_id, self::META_REG_IP, $ip );
 		}
 	}
 
@@ -333,6 +357,8 @@ class RegistrationModule extends AbstractModule implements ProvidesSettings {
 		echo '<br />';
 		Fields::checkbox( 'registration', 'track_ip', $settings->get( 'registration', 'track_ip', true ), __( 'Record the IP address used at last login', 'user-management-suite' ) );
 		echo '<br />';
+		Fields::checkbox( 'registration', 'track_registration_ip', $settings->get( 'registration', 'track_registration_ip', true ), __( 'Record the IP address used to register', 'user-management-suite' ) );
+		echo '<br />';
 		Fields::checkbox( 'registration', 'anonymize_ip', $settings->get( 'registration', 'anonymize_ip', false ), __( 'Anonymize stored IP addresses (recommended for GDPR)', 'user-management-suite' ) );
 		Fields::row_end();
 
@@ -357,11 +383,12 @@ class RegistrationModule extends AbstractModule implements ProvidesSettings {
 
 		return array(
 			'registration' => array(
-				'track_source'     => ! empty( $in['track_source'] ),
-				'track_last_login' => ! empty( $in['track_last_login'] ),
-				'track_ip'         => ! empty( $in['track_ip'] ),
-				'anonymize_ip'     => ! empty( $in['anonymize_ip'] ),
-				'show_columns'     => ! empty( $in['show_columns'] ),
+				'track_source'          => ! empty( $in['track_source'] ),
+				'track_last_login'      => ! empty( $in['track_last_login'] ),
+				'track_ip'              => ! empty( $in['track_ip'] ),
+				'track_registration_ip' => ! empty( $in['track_registration_ip'] ),
+				'anonymize_ip'          => ! empty( $in['anonymize_ip'] ),
+				'show_columns'          => ! empty( $in['show_columns'] ),
 			),
 		);
 	}

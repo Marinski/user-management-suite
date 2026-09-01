@@ -17,17 +17,28 @@ class Security {
 	/**
 	 * Get the client IP address, optionally anonymized.
 	 *
-	 * Only reads REMOTE_ADDR (the connecting peer) to avoid trusting spoofable
-	 * proxy headers. Sites behind a trusted proxy can filter `ums_client_ip`.
+	 * Trusts the Cloudflare connecting-IP header when the `ums_client_ip_trust_proxy`
+	 * filter is on (default true — this site is Cloudflare-fronted, where
+	 * REMOTE_ADDR is the edge pool, not the visitor). Falls back to REMOTE_ADDR.
+	 * Security note: the trust filter must only stay enabled while the origin
+	 * firewall guarantees traffic arrives via Cloudflare, otherwise the header is
+	 * spoofable; the exchange still validates that the value parses as an IP.
 	 *
 	 * @param bool $anonymize Whether to mask the last octet / segment.
 	 * @return string
 	 */
 	public static function client_ip( $anonymize = false ) {
-		$ip = '';
+		$ip          = '';
+		$trust_proxy = (bool) apply_filters( 'ums_client_ip_trust_proxy', true );
 
-		if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
-			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+		if ( $trust_proxy && ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) {
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
+		}
+
+		// A malformed / non-IP proxy header must not overwrite the connecting
+		// peer, and never makes the caller think the client is unknown.
+		if ( '' === $ip || false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		}
 
 		$ip = (string) apply_filters( 'ums_client_ip', $ip );

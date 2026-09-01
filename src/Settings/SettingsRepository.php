@@ -47,11 +47,12 @@ class SettingsRepository {
 				'delete_data_on_uninstall' => false,
 			),
 			'registration'  => array(
-				'track_source'     => true,
-				'track_last_login' => true,
-				'track_ip'         => true,
-				'anonymize_ip'     => false,
-				'show_columns'     => true,
+				'track_source'          => true,
+				'track_last_login'      => true,
+				'track_ip'              => true,
+				'track_registration_ip' => true,
+				'anonymize_ip'          => false,
+				'show_columns'          => true,
 			),
 			'verification'  => array(
 				'require_email_verification' => true,
@@ -66,6 +67,8 @@ class SettingsRepository {
 				'blocked_domains'            => array(),
 				'allowed_domains'            => array(),
 				'blocked_usernames'          => array(),
+				'blocked_keywords'           => array(),
+				'blocked_ips'                => array(),
 				'block_generic_email'        => false,
 				// reCAPTCHA.
 				'recaptcha_version'          => '', // phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- Valid values: empty, v2, v2_invisible, v3.

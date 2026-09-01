@@ -136,6 +136,14 @@ class Privacy {
 				);
 			}
 
+			$reg_ip = get_user_meta( $user->ID, '_ums_registration_ip', true );
+			if ( $reg_ip ) {
+				$data[] = array(
+					'name'  => __( 'Registration IP', 'user-management-suite' ),
+					'value' => esc_html( $reg_ip ),
+				);
+			}
+
 			if ( ! empty( $data ) ) {
 				$items[] = array(
 					'group_id'    => $group_id,
@@ -348,6 +356,7 @@ class Privacy {
 		$erasable = array(
 			'_ums_registration_url',
 			'_ums_registration_source',
+			'_ums_registration_ip',
 			'_ums_last_login',
 			'_ums_last_login_ip',
 			'_ums_activation_key',

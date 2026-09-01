@@ -98,6 +98,11 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 
 		// Spam + reCAPTCHA on the registration/login/lost-password forms.
 		add_filter( 'registration_errors', array( $this, 'registration_errors' ), 10, 3 );
+		// WooCommerce registers through wc_create_new_customer(), which does not
+		// run the core `registration_errors` filter. Gate that surface with the
+		// same spam rules (verified email + checkout gate already cover the order;
+		// reCAPTCHA stays wp-login-only so checkout buyers are not challenged).
+		add_filter( 'woocommerce_registration_errors', array( $this, 'woocommerce_registration_errors' ), 10, 3 );
 		add_filter( 'wp_authenticate_user', array( $this, 'login_recaptcha' ), 10 );
 		add_action( 'lostpassword_post', array( $this, 'lostpassword_recaptcha' ) );
 
@@ -773,6 +778,23 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 	}
 
 	/**
+	 * Gate WooCommerce registrations with the spam rules.
+	 *
+	 * Runs inside wc_create_new_customer(), which calls this filter with
+	 * after `woocommerce_register_post`; a WP_Error here stops the customer from
+	 * being created. ReCAPTCHA is intentionally not enforced on this surface so
+	 * checkout / My Account buyers are not challenged.
+	 *
+	 * @param \WP_Error $errors      Error collector.
+	 * @param string    $username    Submitted username.
+	 * @param string    $user_email  Submitted email.
+	 * @return \WP_Error
+	 */
+	public function woocommerce_registration_errors( $errors, $username, $user_email ) {
+		return $this->spam->validate( $errors, $username, $user_email );
+	}
+
+	/**
 	 * Verify reCAPTCHA on login.
 	 *
 	 * @param \WP_User|\WP_Error $user Auth result.
@@ -1110,13 +1132,19 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 
 		echo '<tr><th colspan="2"><h3>' . esc_html__( 'Spam protection', 'user-management-suite' ) . '</h3></th></tr>';
 		Fields::row_start( __( 'Blocked email domains', 'user-management-suite' ) );
-		Fields::textarea( 'verification', 'blocked_domains', Security::array_to_lines( $v['blocked_domains'] ), __( 'One domain per line, e.g. spam.com', 'user-management-suite' ) );
+		Fields::textarea( 'verification', 'blocked_domains', Security::array_to_lines( $v['blocked_domains'] ), __( 'One domain per line, e.g. spam.com. A leading dot blocks a suffix: .xyz blocks the whole TLD.', 'user-management-suite' ) );
 		Fields::row_end();
 		Fields::row_start( __( 'Allowed email domains', 'user-management-suite' ) );
 		Fields::textarea( 'verification', 'allowed_domains', Security::array_to_lines( $v['allowed_domains'] ), __( 'If set, only these domains may register. One per line.', 'user-management-suite' ) );
 		Fields::row_end();
 		Fields::row_start( __( 'Blocked usernames', 'user-management-suite' ) );
 		Fields::textarea( 'verification', 'blocked_usernames', Security::array_to_lines( $v['blocked_usernames'] ), __( 'One username per line.', 'user-management-suite' ) );
+		Fields::row_end();
+		Fields::row_start( __( 'Blocked keywords', 'user-management-suite' ) );
+		Fields::textarea( 'verification', 'blocked_keywords', Security::array_to_lines( $v['blocked_keywords'] ), __( 'One keyword per line. Any registration whose username or email local part contains a keyword is rejected. Seed from the legacy ATS casino/betting list.', 'user-management-suite' ) );
+		Fields::row_end();
+		Fields::row_start( __( 'Blocked IP addresses', 'user-management-suite' ) );
+		Fields::textarea( 'verification', 'blocked_ips', Security::array_to_lines( $v['blocked_ips'] ), __( 'One IP per line. Registrations from these addresses are rejected (real client IP behind Cloudflare is used).', 'user-management-suite' ) );
 		Fields::row_end();
 		Fields::row_start( __( 'Generic emails', 'user-management-suite' ) );
 		Fields::checkbox( 'verification', 'block_generic_email', $v['block_generic_email'], __( 'Block role-based addresses (admin@, info@, support@, …)', 'user-management-suite' ) );
@@ -1188,6 +1216,8 @@ class VerificationModule extends AbstractModule implements ProvidesSettings {
 				'blocked_domains'            => isset( $in['blocked_domains'] ) ? Security::lines_to_array( $in['blocked_domains'] ) : array(),
 				'allowed_domains'            => isset( $in['allowed_domains'] ) ? Security::lines_to_array( $in['allowed_domains'] ) : array(),
 				'blocked_usernames'          => isset( $in['blocked_usernames'] ) ? Security::lines_to_array( $in['blocked_usernames'], 'sanitize_user' ) : array(),
+				'blocked_keywords'           => isset( $in['blocked_keywords'] ) ? Security::lines_to_array( $in['blocked_keywords'], 'sanitize_text_field' ) : array(),
+				'blocked_ips'                => isset( $in['blocked_ips'] ) ? Security::lines_to_array( $in['blocked_ips'] ) : array(),
 				'block_generic_email'        => ! empty( $in['block_generic_email'] ),
 				'recaptcha_version'          => isset( $in['recaptcha_version'] ) && in_array( $in['recaptcha_version'], array( 'v2', 'v2_invisible', 'v3' ), true ) ? $in['recaptcha_version'] : '',
 				'recaptcha_site_key'         => isset( $in['recaptcha_site_key'] ) ? sanitize_text_field( $in['recaptcha_site_key'] ) : '',

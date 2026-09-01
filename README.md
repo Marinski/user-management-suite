@@ -80,6 +80,9 @@ form, or a mailbox provider's RFC 8058 `List-Unsubscribe=One-Click` body.
 | `ums_unverified_login_message` | Message an unverified user sees at login (already existed, now also reused by the API path). |
 | `ums_resend_page_url` | Override the page the resend/verify links point to. |
 | `ums_email_verified` | Fired with the user id once their email is verified. |
+| `ums_registration_keyword_message` | Message shown when a registration matches a blocked keyword (kept vague). |
+| `ums_registration_ip_message` | Message shown when a registration comes from a blocked IP (kept vague). |
+| `ums_client_ip_trust_proxy` | Default `true`: trust `CF-Connecting-IP` for the resolved client IP. Set `false` to read only the connecting peer (`REMOTE_ADDR`). |
 
 `ums_notification_allowed( $type_id, $user_id )` is available as a plain
 function even when the module is switched off, so adding the check to existing
@@ -105,6 +108,33 @@ is confirmed. The cart is preserved on the same browser session, so the buyer
 verifies (auto-login) and completes the checkout. If the billing email already
 belongs to an account, no duplicate is created and the existing unverified
 account is blocked until verified.
+
+### Registration anti-spam coverage
+
+The Verification module's spam rules — blocked/allowed domains, blocked keywords,
+blocked IPs, generic emails — apply to **both** registration surfaces:
+
+- WordPress core / custom forms via `registration_errors`;
+- WooCommerce (`wc_create_new_customer()`, used by the checkout and My Account
+  register) via `woocommerce_registration_errors`. WooCommerce does not run the
+  core filter, so without this the checkout path bypassed every block.
+
+Keyword rules scan the username and the email **local part** (before `@`) only,
+so a legitimate domain half (e.g. `.vip`) never triggers a block. Tokens shorter
+than 5 characters (`bet`, `vip`, `neha`, …) are ambiguous substrings, so they
+only match a whole username or whole local part; longer tokens match anywhere.
+Blocked IPs are resolved through `Security::client_ip()`, which trusts the
+Cloudflare `CF-Connecting-IP` header when `ums_client_ip_trust_proxy` is on
+(default) and honours `registration.anonymize_ip` when recording. The
+verified-email checkout gate is a separate concern from these registration
+blocks.
+
+The `blocked_keywords`, `blocked_ips` setting lists, and the registration-IP
+recording (`registration.track_registration_ip`) replace the legacy
+`ats-anti-spam-registration` must-use plugin. On upgrade the plugin imports that
+mu-plugin's keyword list, disposable domains (merged into `blocked_domains`) and
+`ats_blocked_ips` option into `ums_settings` exactly once, after which the
+mu-plugin can be deleted.
 
 ### Resend verification over REST
 

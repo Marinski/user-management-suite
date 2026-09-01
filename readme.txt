@@ -4,7 +4,7 @@ Tags: users, user registration, email verification, notification preferences, us
 Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -112,6 +112,13 @@ Acquisition tracking can be gated behind a consent platform via the
 answers that filter, no tracking happens at all.
 
 == Changelog ==
+
+= 1.2.0 =
+* New: registration anti-spam rules for the WooCommerce sign-up path (checkout / My Account), which previously bypassed UMS — keyword, blocked-domain and blocked-IP checks now gate `wc_create_new_customer()` before any account is created.
+* New: blocked-keyword and blocked-IP lists in the Verification settings, with IP checks resolved via the real Cloudflare client IP.
+* New: records the IP used to register (`_ums_registration_ip`), mirroring the legacy ATS mu-plugin, with a `track_registration_ip` toggle.
+* Changed: `ums_client_ip_trust_proxy` filter (default on) lets `Security::client_ip()` read the Cloudflare `CF-Connecting-IP` header instead of the edge `REMOTE_ADDR`.
+* Migration: the legacy `ats-anti-spam-registration` mu-plugin rules (keywords, disposable domains, blocked IPs) are imported into `ums_settings` once, so the mu-plugin can be deleted.
 
 = 1.1.1 =
 * Fixed: a social sign-in bounces the visitor through the identity provider, so the referrer on the return leg was the provider's domain. `accounts.google.com` reduces to "google" and was landing in organic search, crediting SEO for people who clicked "Sign in with Google". Identity-provider and payment-return hosts are now ignored as sources, filterable via `ums_attribution_auth_providers`.

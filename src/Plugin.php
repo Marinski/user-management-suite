@@ -24,6 +24,7 @@ use Marinski\UserManagementSuite\Modules\Insights\InsightsModule;
 use Marinski\UserManagementSuite\Modules\Notifications\NotificationsModule;
 use Marinski\UserManagementSuite\Support\Privacy;
 use Marinski\UserManagementSuite\Support\Schema;
+use Marinski\UserManagementSuite\Support\AtsConsolidation;
 use Marinski\UserManagementSuite\Cli\Commands;
 
 defined( 'ABSPATH' ) || exit;
@@ -114,6 +115,9 @@ final class Plugin {
 
 		// Cheap no-op once the tables match the shipped schema version.
 		Schema::maybe_upgrade();
+
+		// One-time import of the legacy ATS mu-plugin rules into settings.
+		AtsConsolidation::maybe_migrate();
 
 		Commands::register();
 
